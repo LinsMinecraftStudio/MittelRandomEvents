@@ -1,0 +1,62 @@
+mre:
+  event:
+    example_broadcast:
+      name: "Example Broadcast"
+      description: "Broadcasts a configured message."
+  action:
+    select_players:
+      name: "Select Players"
+      description: "Selects online players for following actions."
+    select_worlds:
+      name: "Select Worlds"
+      description: "Selects loaded worlds for following actions."
+    clear_players:
+      name: "Clear Players"
+      description: "Clears selected players."
+    clear_worlds:
+      name: "Clear Worlds"
+      description: "Clears selected worlds."
+    resolve_placeholder:
+      name: "Resolve Placeholder"
+      description: "Resolves PlaceholderAPI values for selected players."
+    mini_resolve_placeholder:
+      name: "Resolve MiniPlaceholder"
+      description: "Resolves MiniPlaceholders values for selected players."
+  condition:
+    players:
+      name: "Player Count"
+      description: "Checks the selected player count."
+    worlds:
+      name: "World Count"
+      description: "Checks the selected world count."
+    player_permission:
+      name: "Player Permission"
+      description: "Checks whether a selected player has a permission."
+    world:
+      name: "World"
+      description: "Checks whether a world is selected."
+    player_name_contains:
+      name: "Player Name Contains"
+      description: "Checks selected player names."
+    world_name_contains:
+      name: "World Name Contains"
+      description: "Checks selected world names."
+    server_online_players:
+      name: "Server Online Players"
+      description: "Checks the online player count."
+    server_plugin_enabled:
+      name: "Plugin Enabled"
+      description: "Checks whether a plugin is enabled."
+    server_plugin_disabled:
+      name: "Plugin Disabled"
+      description: "Checks whether a plugin is disabled."
+    server_version_contains:
+      name: "Server Version Contains"
+      description: "Checks the server version."
+    server_tps:
+      name: "Server TPS"
+      description: "Checks the server TPS."
+  line:
+    example:
+      name: "Example Line"
+      description: "Runs configured random events on a schedule."
