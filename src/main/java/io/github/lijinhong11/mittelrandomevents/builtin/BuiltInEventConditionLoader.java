@@ -4,7 +4,9 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 
 import java.util.Map;
 
-/** Deserializes built-in event conditions from YAML data. */
+/**
+ * Deserializes built-in event conditions from YAML data.
+ */
 public final class BuiltInEventConditionLoader {
     private BuiltInEventConditionLoader() {}
 

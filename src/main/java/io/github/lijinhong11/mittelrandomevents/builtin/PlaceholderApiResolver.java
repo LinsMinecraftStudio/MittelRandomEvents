@@ -4,7 +4,11 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 
-/** PlaceholderAPI integration. This class is loaded only when PlaceholderAPI is enabled. */
+/**
+ * PlaceholderAPI integration.
+ *
+ * <p>This class is loaded only when PlaceholderAPI is enabled.
+ */
 public final class PlaceholderApiResolver {
     private PlaceholderApiResolver() {}
 

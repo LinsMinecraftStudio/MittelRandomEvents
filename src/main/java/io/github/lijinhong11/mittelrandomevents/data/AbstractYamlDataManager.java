@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-/** Common YAML file lifecycle used by event and event-line data managers. */
+/**
+ * Common YAML file lifecycle used by event and event-line data managers.
+ */
 public abstract class AbstractYamlDataManager<T> {
     private final File file;
     private YamlConfiguration configuration;

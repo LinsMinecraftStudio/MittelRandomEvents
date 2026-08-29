@@ -91,18 +91,15 @@ public class RandomEvent implements Localized {
      *
      * @return the event identifier
      */
-    @Override
-    public String id() {
+    @Override public String id() {
         return id;
     }
 
-    @Override
-    public Component displayName(org.bukkit.command.CommandSender sender) {
+    @Override public Component displayName(org.bukkit.command.CommandSender sender) {
         return displayName;
     }
 
-    @Override
-    public Material icon() {
+    @Override public Material icon() {
         return icon;
     }
 
@@ -144,8 +141,7 @@ public class RandomEvent implements Localized {
         return enabled && conditions.stream().allMatch(condition -> condition.test(context));
     }
 
-    @Override
-    public boolean equals(Object object) {
+    @Override public boolean equals(Object object) {
         if (this == object) {
             return true;
         }
@@ -155,8 +151,7 @@ public class RandomEvent implements Localized {
         return id.equals(other.id);
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return Objects.hash(id);
     }
 }

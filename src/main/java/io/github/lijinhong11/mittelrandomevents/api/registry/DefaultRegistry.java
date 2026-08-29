@@ -14,7 +14,7 @@ import java.util.Optional;
  *
  * @param <T> the registered value type
  */
-public class DefaultRegistry<T> implements Registry<T> {
+class DefaultRegistry<T> implements Registry<T> {
     private final Map<String, T> values = new LinkedHashMap<>();
     private final java.util.function.Function<T, String> idResolver;
 
@@ -28,14 +28,13 @@ public class DefaultRegistry<T> implements Registry<T> {
         this.idResolver = idResolver;
     }
 
-    @Override
     /**
      * Registers or replaces a value.
      *
      * @param value the value to register
      * @throws IllegalArgumentException if the value is null or its resolved ID is null or blank
      */
-    public void register(T value) {
+    @Override public void register(T value) {
         if (value == null) {
             throw new IllegalArgumentException("Registry value must not be null");
         }
@@ -46,42 +45,39 @@ public class DefaultRegistry<T> implements Registry<T> {
         values.put(id, value);
     }
 
-    @Override
     /**
      * Removes a value by ID.
      *
      * @param id the value ID
      */
-    public void unregister(String id) {
+    @Override public void unregister(String id) {
         values.remove(id);
     }
 
-    @Override
+
     /**
      * Looks up a value by ID.
      *
      * @param id the value ID
      * @return the value when registered
      */
-    public Optional<T> get(String id) {
+    @Override public Optional<T> get(String id) {
         return Optional.ofNullable(values.get(id));
     }
 
-    @Override
     /**
      * Returns an unmodifiable view of the registered values.
      *
      * @return registered values in insertion order
      */
-    public Collection<T> values() {
+    @Override public Collection<T> values() {
         return Collections.unmodifiableCollection(values.values());
     }
 
-    @Override
     /**
      * Removes all registered values.
      */
-    public void clear() {
+    @Override public void clear() {
         values.clear();
     }
 }

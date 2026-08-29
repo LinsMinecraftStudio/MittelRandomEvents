@@ -6,7 +6,9 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 
 import java.util.List;
 
-/** Optional built-in action types grouped by their external provider plugin. */
+/**
+ * Optional built-in action types grouped by their external provider plugin.
+ */
 public final class OptionalBuiltInActionType {
     private OptionalBuiltInActionType() {}
 
@@ -29,11 +31,12 @@ public final class OptionalBuiltInActionType {
         }
     }
 
-    /** PlaceholderAPI-backed action types. */
+    /**
+     * PlaceholderAPI-backed action types.
+     */
     public enum PlaceholderApi implements ActionType {
         RESOLVE_PLACEHOLDER("resolve_placeholder") {
-            @Override
-            public void execute(EventAction action, EventContext context) {
+            @Override public void execute(EventAction action, EventContext context) {
                 String value = String.valueOf(action.parameters().getOrDefault("value", ""));
                 List<String> resolved = context.getSelectedPlayers().stream()
                         .map(player -> PlaceholderApiResolver.resolve(value, player, context))
@@ -48,17 +51,17 @@ public final class OptionalBuiltInActionType {
             this.id = id;
         }
 
-        @Override
-        public String id() {
+        @Override public String id() {
             return id;
         }
     }
 
-    /** MiniPlaceholders-backed action types. */
+    /**
+     * MiniPlaceholders-backed action types.
+     */
     public enum MiniPlaceholders implements ActionType {
         RESOLVE_PLACEHOLDER("mini_resolve_placeholder") {
-            @Override
-            public void execute(EventAction action, EventContext context) {
+            @Override public void execute(EventAction action, EventContext context) {
                 String value = String.valueOf(action.parameters().getOrDefault("value", ""));
                 List<String> resolved = context.getSelectedPlayers().stream()
                         .map(player -> MiniPlaceholdersResolver.resolve(value, player, context))
@@ -73,8 +76,7 @@ public final class OptionalBuiltInActionType {
             this.id = id;
         }
 
-        @Override
-        public String id() {
+        @Override public String id() {
             return id;
         }
     }

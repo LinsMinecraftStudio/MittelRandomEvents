@@ -26,13 +26,11 @@ public class MittelRandomEvents extends JavaPlugin {
     private RandomEventDataManager eventDataManager;
     private RandomEventLineDataManager lineDataManager;
 
-    @Override
-    public void onLoad() {
+    @Override public void onLoad() {
         instance = this;
     }
 
-    @Override
-    public void onEnable() {
+    @Override public void onEnable() {
         languageManager = MittelLib.getInstance().getLanguageManager(this);
         taskMaker = new TaskMaker();
         eventManager = new DefaultRandomEventManager();
@@ -54,8 +52,7 @@ public class MittelRandomEvents extends JavaPlugin {
         getLogger().info("MittelRandomEvents is enabled!");
     }
 
-    @Override
-    public void onDisable() {
+    @Override public void onDisable() {
         taskMaker.close();
         if (lineDataManager != null) {
             lineDataManager.saveAndClose();

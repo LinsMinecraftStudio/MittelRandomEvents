@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-/** Default mutable context created for one RandomEventLine execution. */
+/**
+ * Default mutable context created for one RandomEventLine execution.
+ */
 public final class DefaultEventContext implements EventContext {
     private final RandomEventManager manager;
     private final Random random;
@@ -31,49 +33,40 @@ public final class DefaultEventContext implements EventContext {
         this.startedAtMillis = System.currentTimeMillis();
     }
 
-    @Override
-    public RandomEventManager manager() {
+    @Override public RandomEventManager manager() {
         return manager;
     }
 
-    @Override
-    public Random getRandom() {
+    @Override public Random getRandom() {
         return random;
     }
 
-    @Override
-    public Collection<Player> getSelectedPlayers() {
+    @Override public Collection<Player> getSelectedPlayers() {
         return List.copyOf(selectedPlayers);
     }
 
-    @Override
-    public void setSelectedPlayers(Collection<? extends Player> players) {
+    @Override public void setSelectedPlayers(Collection<? extends Player> players) {
         selectedPlayers = new ArrayList<>(players);
     }
 
-    @Override
-    public Collection<World> getSelectedWorlds() {
+    @Override public Collection<World> getSelectedWorlds() {
         return List.copyOf(selectedWorlds);
     }
 
-    @Override
-    public void setSelectedWorlds(Collection<World> worlds) {
+    @Override public void setSelectedWorlds(Collection<World> worlds) {
         selectedWorlds = new ArrayList<>(worlds);
     }
 
-    @Override
-    public long elapsedMillis() {
+    @Override public long elapsedMillis() {
         return System.currentTimeMillis() - startedAtMillis;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
-    public <T> T get(String key) {
+    @Override public <T> T get(String key) {
         return (T) data.get(key);
     }
 
-    @Override
-    public <T> void set(String key, T value) {
+    @Override public <T> void set(String key, T value) {
         data.put(key, value);
     }
 }

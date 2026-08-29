@@ -15,8 +15,7 @@ class LineTask extends AbstractTask {
         this.contextSupplier = contextSupplier;
     }
 
-    @Override
-    protected void run(ScheduledTask task) {
+    @Override protected void run(ScheduledTask task) {
         EventContext context = contextSupplier.get();
         if (context != null) {
             line.execute(context);

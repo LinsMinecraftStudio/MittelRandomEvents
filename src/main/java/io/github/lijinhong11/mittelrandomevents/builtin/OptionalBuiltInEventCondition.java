@@ -2,11 +2,15 @@ package io.github.lijinhong11.mittelrandomevents.builtin;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 
-/** Conditions backed by optional placeholder provider plugins. */
+/**
+ * Conditions backed by optional placeholder provider plugins.
+ */
 public final class OptionalBuiltInEventCondition {
     private OptionalBuiltInEventCondition() {}
 
-    /** PlaceholderAPI-backed conditions. */
+    /**
+     * PlaceholderAPI-backed conditions.
+     */
     public static final class PlaceholderApi {
         private PlaceholderApi() {}
 
@@ -35,7 +39,9 @@ public final class OptionalBuiltInEventCondition {
         }
     }
 
-    /** MiniPlaceholders-backed conditions for selected players. */
+    /**
+     * MiniPlaceholders-backed conditions for selected players.
+     */
     public static final class MiniPlaceholders {
         private MiniPlaceholders() {}
 

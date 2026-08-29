@@ -5,7 +5,11 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
-/** MiniPlaceholders integration. This class is loaded only when MiniPlaceholders is enabled. */
+/**
+ * MiniPlaceholders integration.
+ *
+ * <p>This class is loaded only when MiniPlaceholders is enabled.
+ */
 public final class MiniPlaceholdersResolver {
     private MiniPlaceholdersResolver() {}
 

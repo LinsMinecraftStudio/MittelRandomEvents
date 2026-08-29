@@ -28,13 +28,19 @@ public interface ActionType {
      */
     String id();
 
-    /** @return the direct display name component */
+    /**
+     * @return the direct display name component
+     */
     default Component displayName() { return Component.text(id()); }
 
-    /** @return the direct description component */
+    /**
+     * @return the direct description component
+     */
     default Component description() { return Component.empty(); }
 
-    /** @return the material used as this action type's GUI icon */
+    /**
+     * @return the material used as this action type's GUI icon
+     */
     default Material icon() { return Material.COMMAND_BLOCK; }
 
     /**

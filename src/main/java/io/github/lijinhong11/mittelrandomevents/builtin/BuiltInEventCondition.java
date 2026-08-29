@@ -7,7 +7,9 @@ import org.bukkit.Bukkit;
 import java.util.Collection;
 import java.util.Map;
 
-/** Factory methods for conditions shipped with MittelRandomEvents. */
+/**
+ * Factory methods for conditions shipped with MittelRandomEvents.
+ */
 public final class BuiltInEventCondition {
     private BuiltInEventCondition() {
         throw new UnsupportedOperationException("Utility class");
@@ -96,7 +98,9 @@ public final class BuiltInEventCondition {
                         .anyMatch(worldName::equals));
     }
 
-    /** Creates a condition requiring a selected player's name to contain text. */
+    /**
+     * Creates a condition requiring a selected player's name to contain text.
+     */
     public static EventCondition playerNameContains(String text) {
         requireText(text, "Player name text");
         return configured("player_name_contains", Map.of("value", text),
@@ -253,18 +257,15 @@ public final class BuiltInEventCondition {
     private static EventCondition configured(
             String type, Map<String, Object> parameters, EventCondition delegate) {
         return new EventCondition() {
-            @Override
-            public boolean test(EventContext context) {
+            @Override public boolean test(EventContext context) {
                 return delegate.test(context);
             }
 
-            @Override
-            public String type() {
+            @Override public String type() {
                 return type;
             }
 
-            @Override
-            public Map<String, Object> parameters() {
+            @Override public Map<String, Object> parameters() {
                 return parameters;
             }
         };

@@ -12,7 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Reads and saves {@link RandomEvent} objects from {@code data/events.yml}. */
+/**
+ * Reads and saves {@link RandomEvent} objects from {@code data/events.yml}.
+ */
 public final class RandomEventDataManager extends AbstractYamlDataManager<RandomEvent> {
     private final RandomEventManager eventManager;
 
@@ -28,8 +30,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         }
     }
 
-    @Override
-    protected RandomEvent read(ConfigurationSection section) {
+    @Override protected RandomEvent read(ConfigurationSection section) {
         List<EventAction> actions = new ArrayList<>();
         for (Map<?, ?> rawAction : section.getMapList("actions")) {
             Object rawType = rawAction.get("type");
@@ -71,8 +72,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         return event;
     }
 
-    @Override
-    protected void write(ConfigurationSection section, RandomEvent event) {
+    @Override protected void write(ConfigurationSection section, RandomEvent event) {
         section.set("enabled", event.isEnabled());
         section.set("display-name", io.github.lijinhong11.mittellib.utils.components.ComponentUtils.serialize(event.getDisplayName()));
         section.set("icon", event.getIcon().name());
@@ -93,15 +93,13 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         }).toList());
     }
 
-    @Override
-    public void reloadData() {
+    @Override public void reloadData() {
         eventManager.eventsRegistry().clear();
         reloadConfiguration();
         loadData();
     }
 
-    @Override
-    public void saveAndClose() {
+    @Override public void saveAndClose() {
         for (RandomEvent event : eventManager.events()) write(event.id(), event);
         saveConfiguration();
     }

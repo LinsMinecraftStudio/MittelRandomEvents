@@ -4,6 +4,7 @@ main: io.github.lijinhong11.mittelrandomevents.MittelRandomEvents
 api-version: '1.21'
 author: lijinhong11
 description: Configurable and developer-friendly random events.
+folia-supported: true
 softdepend:
   - PlaceholderAPI
   - MiniPlaceholders

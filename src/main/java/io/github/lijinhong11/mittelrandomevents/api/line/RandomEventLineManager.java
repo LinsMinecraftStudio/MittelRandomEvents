@@ -3,7 +3,9 @@ package io.github.lijinhong11.mittelrandomevents.api.line;
 import java.util.Collection;
 import java.util.Optional;
 
-/** Registry and lifecycle entry point for configured random event lines. */
+/**
+ * Registry and lifecycle entry point for configured random event lines.
+ */
 public interface RandomEventLineManager {
     /**
      * Registers a line, replacing an existing line with the same ID.

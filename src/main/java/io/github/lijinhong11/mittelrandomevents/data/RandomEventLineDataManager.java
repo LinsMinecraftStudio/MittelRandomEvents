@@ -1,9 +1,11 @@
 package io.github.lijinhong11.mittelrandomevents.data;
 
+import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
@@ -12,7 +14,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Reads and saves {@link RandomEventLine} objects from {@code data/lines.yml}. */
+/**
+ * Reads and saves {@link RandomEventLine} objects from {@code data/lines.yml}.
+ */
 public final class RandomEventLineDataManager extends AbstractYamlDataManager<RandomEventLine> {
     private final RandomEventManager eventManager;
     private final RandomEventLineManager lineManager;
@@ -29,8 +33,7 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         for (RandomEventLine line : loadAll()) lineManager.register(line);
     }
 
-    @Override
-    protected RandomEventLine read(ConfigurationSection section) {
+    @Override protected RandomEventLine read(ConfigurationSection section) {
         List<RandomEvent> events = new ArrayList<>();
         Map<String, Double> configuredWeights = new LinkedHashMap<>();
         ConfigurationSection eventSection = section.getConfigurationSection("events");
@@ -56,9 +59,11 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         RandomEventLine line = new RandomEventLine(
                 section.getName(), section.getInt("interval-seconds", 60), events);
         String displayName = section.getString("display-name");
+
         if (displayName != null) {
-            line.setDisplayName(io.github.lijinhong11.mittellib.utils.components.ComponentUtils.deserialize(displayName));
+            line.setDisplayNameFunction(_ -> ComponentUtils.deserialize(displayName));
         }
+
         line.setIcon(material(section.getString("icon"), line.getIcon()));
         if (eventSection != null) {
             for (RandomEvent event : events) {
@@ -68,10 +73,9 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         return line;
     }
 
-    @Override
-    protected void write(ConfigurationSection section, RandomEventLine line) {
+    @Override protected void write(ConfigurationSection section, RandomEventLine line) {
         section.set("interval-seconds", line.intervalSeconds());
-        section.set("display-name", io.github.lijinhong11.mittellib.utils.components.ComponentUtils.serialize(line.getDisplayName()));
+        section.set("display-name", ComponentUtils.serialize(line.getDisplayNameFunction().apply(null)));
         section.set("icon", line.getIcon().name());
         ConfigurationSection events = section.createSection("events");
         for (RandomEvent event : line.events()) {
@@ -93,24 +97,23 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         return lineManager.get(id).orElse(null);
     }
 
-    @Override
-    public void reloadData() {
+    @Override public void reloadData() {
         lineManager.clear();
         reloadConfiguration();
         loadData();
     }
 
-    @Override
-    public void saveAndClose() {
+    @Override public void saveAndClose() {
         for (RandomEventLine line : lineManager.lines()) write(line.id(), line);
         saveConfiguration();
     }
 
-    private static org.bukkit.Material material(String value, org.bukkit.Material fallback) {
+    private static Material material(String value, Material fallback) {
         if (value == null) {
             return fallback;
         }
-        org.bukkit.Material material = org.bukkit.Material.matchMaterial(value);
+
+        Material material = Material.matchMaterial(value);
         return material == null ? fallback : material;
     }
 }

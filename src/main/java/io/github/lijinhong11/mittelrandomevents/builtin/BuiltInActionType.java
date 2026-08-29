@@ -20,10 +20,11 @@ import java.util.stream.Collectors;
  * the same registry without modifying this enum.
  */
 public enum BuiltInActionType implements ActionType {
-    /** Selects online players, optionally filtered by permission and world. */
+    /**
+     * Selects online players, optionally filtered by permission and world.
+     */
     SELECT_PLAYERS("select_players") {
-        @Override
-        public void execute(EventAction action, EventContext context) {
+        @Override public void execute(EventAction action, EventContext context) {
             String permission = stringParameter(action, "permission", "");
             String worldName = stringParameter(action, "world", "");
 
@@ -39,10 +40,11 @@ public enum BuiltInActionType implements ActionType {
         }
     },
 
-    /** Selects loaded worlds, optionally filtering by world name. */
+    /**
+     * Selects loaded worlds, optionally filtering by world name.
+     */
     SELECT_WORLDS("select_worlds") {
-        @Override
-        public void execute(EventAction action, EventContext context) {
+        @Override public void execute(EventAction action, EventContext context) {
             String worldName = stringParameter(action, "world", "");
             List<World> worlds = worldName.isBlank()
                     ? new ArrayList<>(Bukkit.getWorlds())
@@ -55,18 +57,20 @@ public enum BuiltInActionType implements ActionType {
         }
     },
 
-    /** Removes all currently selected players from the context. */
+    /**
+     * Removes all currently selected players from the context.
+     */
     CLEAR_PLAYERS("clear_players") {
-        @Override
-        public void execute(EventAction action, EventContext context) {
+        @Override public void execute(EventAction action, EventContext context) {
             context.setSelectedPlayers(List.of());
         }
     },
 
-    /** Removes all currently selected worlds from the context. */
+    /**
+     * Removes all currently selected worlds from the context.
+     */
     CLEAR_WORLDS("clear_worlds") {
-        @Override
-        public void execute(EventAction action, EventContext context) {
+        @Override public void execute(EventAction action, EventContext context) {
             context.setSelectedWorlds(List.of());
         }
     };
@@ -87,8 +91,7 @@ public enum BuiltInActionType implements ActionType {
      *
      * @return the built-in action identifier
      */
-    @Override
-    public String id() {
+    @Override public String id() {
         return id;
     }
 

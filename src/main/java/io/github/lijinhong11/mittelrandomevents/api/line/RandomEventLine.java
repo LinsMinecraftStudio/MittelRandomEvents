@@ -98,18 +98,15 @@ public class RandomEventLine implements Localized {
      *
      * @return the line identifier
      */
-    @Override
-    public String id() {
+    @Override public String id() {
         return id;
     }
 
-    @Override
-    public Component displayName(@Nullable CommandSender sender) {
+    @Override public Component displayName(@Nullable CommandSender sender) {
         return displayNameFunction.apply(sender);
     }
 
-    @Override
-    public Material icon() {
+    @Override public Material icon() {
         return icon;
     }
 

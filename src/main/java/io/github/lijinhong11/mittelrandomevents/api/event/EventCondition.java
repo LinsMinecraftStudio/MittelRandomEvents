@@ -26,13 +26,19 @@ public interface EventCondition {
         return null;
     }
 
-    /** @return the direct display name component */
+    /**
+     * @return the direct display name component
+     */
     default Component displayName() { return Component.text(type() == null ? "condition" : type()); }
 
-    /** @return the direct description component */
+    /**
+     * @return the direct description component
+     */
     default Component description() { return Component.empty(); }
 
-    /** @return the material used as this condition's GUI icon */
+    /**
+     * @return the material used as this condition's GUI icon
+     */
     default Material icon() { return Material.COMPARATOR; }
 
     /**

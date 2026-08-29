@@ -74,5 +74,14 @@ public class MRECommands {
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
+
+        LiteralCommandNode<CommandSourceStack> reload = Commands.literal("reload")
+                .requires(c -> c.getSender().hasPermission(Constants.PERM_RELOAD))
+                .executes(c -> {
+                    MittelRandomEvents.getInstance().getLanguageManager().reload();
+                    MittelRandomEvents.getInstance().reloadData();
+                    return Command.SINGLE_SUCCESS;
+                })
+                .build();
     }
 }

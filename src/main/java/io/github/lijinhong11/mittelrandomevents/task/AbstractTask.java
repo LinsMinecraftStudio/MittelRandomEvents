@@ -36,8 +36,7 @@ public abstract class AbstractTask implements Consumer<ScheduledTask> {
      *
      * @param task the callback's scheduled task handle
      */
-    @Override
-    public final void accept(ScheduledTask task) {
+    @Override public final void accept(ScheduledTask task) {
         bind(task);
         if (!cancelled.get()) {
             run(task);
