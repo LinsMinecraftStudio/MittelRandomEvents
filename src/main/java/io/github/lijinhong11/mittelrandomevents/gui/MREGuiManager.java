@@ -56,17 +56,7 @@ public final class MREGuiManager {
 
         for (RandomEvent event : plugin().getEventManager().events()) {
             gui.addPageItem(ButtonItem.clickable(objectItem(player, event), (g, e) -> {
-                if (e.getClick().isRightClick()) {
-                    plugin().getEventManager().unregister(event.id());
-                    plugin().getLineManager().lines().forEach(line -> line.events().stream()
-                            .filter(registered -> registered.equals(event))
-                            .toList()
-                            .forEach(line::removeEvent));
-                    plugin().saveData();
-                    openEventList(player);
-                } else {
-                    openEventManagement(player, event);
-                }
+                openEventManagement(player, event);
                 return false;
             }));
         }
@@ -82,14 +72,7 @@ public final class MREGuiManager {
 
         for (RandomEventLine line : plugin().getLineManager().lines()) {
             gui.addPageItem(ButtonItem.clickable(objectItem(player, line), (g, e) -> {
-                if (e.getClick().isRightClick()) {
-                    plugin().getTaskMaker().cancelLine(line.id());
-                    plugin().getLineManager().unregister(line.id());
-                    plugin().saveData();
-                    openLineList(player);
-                } else {
-                    openLineManagement(player, line);
-                }
+                openLineManagement(player, line);
                 return false;
             }));
         }
@@ -155,6 +138,35 @@ public final class MREGuiManager {
                         plugin().saveData();
                         openEventManagement(player, event);
                     });
+                    return false;
+                }));
+        gui.putItem(
+                slot(4, 7), ButtonItem.clickable(messagedItem(Material.CLOCK, player, "gui.items.duration"), (g, e) -> {
+                    player.closeInventory();
+                    IntegerInputDialog.create(
+                                    msg(player, "gui.events.duration-title"),
+                                    msg(player, "gui.events.duration-label"),
+                                    event.durationSeconds(),
+                                    0,
+                                    Integer.MAX_VALUE,
+                                    value -> {
+                                        event.setDurationSeconds(value);
+                                        plugin().saveData();
+                                        openEventManagement(player, event);
+                                    },
+                                    () -> openEventManagement(player, event))
+                            .show(player);
+                    return false;
+                }));
+        gui.putItem(
+                slot(5, 7), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
+                    plugin().getEventManager().unregister(event.id());
+                    plugin().getLineManager().lines().forEach(line -> line.events().stream()
+                            .filter(registered -> registered.equals(event))
+                            .toList()
+                            .forEach(line::removeEvent));
+                    plugin().saveData();
+                    openEventList(player);
                     return false;
                 }));
         putBack(gui, player, MREGuiManager::openEventList);
@@ -229,6 +241,14 @@ public final class MREGuiManager {
                         plugin().saveData();
                         openLineManagement(player, line);
                     });
+                    return false;
+                }));
+        gui.putItem(
+                slot(5, 7), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
+                    plugin().getTaskMaker().cancelLine(line.id());
+                    plugin().getLineManager().unregister(line.id());
+                    plugin().saveData();
+                    openLineList(player);
                     return false;
                 }));
         putBack(gui, player, MREGuiManager::openLineList);

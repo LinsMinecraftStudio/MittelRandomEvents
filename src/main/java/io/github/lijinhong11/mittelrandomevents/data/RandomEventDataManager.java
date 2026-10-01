@@ -46,6 +46,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
             event.setDisplayName(ComponentUtils.deserialize(displayName));
         }
         event.setEnabled(section.getBoolean("enabled", true));
+        event.setDurationSeconds(section.getInt("duration-seconds", 0));
         event.setIcon(material(section.getString("icon"), event.getIcon()));
         List<EventCondition> conditions = new ArrayList<>();
         for (Map<?, ?> rawCondition : section.getMapList("conditions")) {
@@ -80,6 +81,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
     @Override
     protected void write(ConfigurationSection section, RandomEvent event) {
         section.set("enabled", event.isEnabled());
+        section.set("duration-seconds", event.durationSeconds());
         section.set("display-name", ComponentUtils.serialize(event.getDisplayName()));
         section.set("icon", event.getIcon().name());
         section.set(

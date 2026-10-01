@@ -30,6 +30,8 @@ public class RandomEvent implements Localized {
     @Getter
     private boolean enabled = true;
 
+    private int durationSeconds;
+
     private List<EventCondition> conditions = List.of();
 
     @Getter
@@ -224,6 +226,17 @@ public class RandomEvent implements Localized {
      */
     public boolean isCompatible(EventContext context) {
         return enabled && conditions.stream().allMatch(condition -> condition.test(context));
+    }
+
+    public int durationSeconds() {
+        return durationSeconds;
+    }
+
+    public void setDurationSeconds(int durationSeconds) {
+        if (durationSeconds < 0) {
+            throw new IllegalArgumentException("Duration must not be negative");
+        }
+        this.durationSeconds = durationSeconds;
     }
 
     @Override

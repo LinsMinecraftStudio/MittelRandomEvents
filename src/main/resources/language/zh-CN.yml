@@ -101,6 +101,12 @@ gui:
     end-actions:
       name: "<yellow>结束时动作"
       lore: []
+    duration:
+      name: "<yellow>持续时间"
+      lore: []
+    delete:
+      name: "<red>删除"
+      lore: []
     conditions:
       name: "<yellow>条件"
       lore: []
@@ -183,6 +189,8 @@ gui:
     create:
       title: "创建事件"
       label: "请输入事件 ID。"
+    duration-title: "设置事件持续时间"
+    duration-label: "持续时间秒数，0 表示立即结束"
   lines:
     title: "<gold>随机事件线"
     management:

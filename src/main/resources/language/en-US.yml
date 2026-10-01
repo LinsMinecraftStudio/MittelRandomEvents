@@ -199,6 +199,12 @@ gui:
     end-actions:
       name: "<yellow>End Actions"
       lore: []
+    duration:
+      name: "<yellow>Duration"
+      lore: []
+    delete:
+      name: "<red>Delete"
+      lore: []
     conditions:
       name: "<yellow>Conditions"
       lore: []
@@ -281,6 +287,8 @@ gui:
     create:
       title: "Create Event"
       label: "Enter an event ID."
+    duration-title: "Set Event Duration"
+    duration-label: "Duration in seconds; zero ends immediately"
   lines:
     title: "<gold>Random Event Lines"
     management:

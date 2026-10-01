@@ -36,6 +36,10 @@ public class RandomEventLine implements Localized {
     private String cron;
     private final List<RandomEvent> events;
     private final WeightedRandomMap<String> weights = new WeightedRandomMap<>();
+    private RandomEvent currentEvent;
+    private EventContext currentContext;
+    private long currentEventEndsAtMillis;
+    private long nextExecutionAtMillis;
 
     @Getter
     @Setter
@@ -272,13 +276,49 @@ public class RandomEventLine implements Localized {
      */
     public Optional<RandomEvent> execute(EventContext context) {
         Objects.requireNonNull(context, "context");
+        long now = System.currentTimeMillis();
+        if (intervalSeconds > 0) {
+            nextExecutionAtMillis = now + lineIntervalMillis();
+        }
+        if (currentEvent != null) {
+            if (now < currentEventEndsAtMillis) {
+                return Optional.of(currentEvent);
+            }
+            currentContext.resetExecutionControl();
+            executeActions(currentEvent.endActions(), currentContext);
+            currentEvent = null;
+            currentContext = null;
+            currentEventEndsAtMillis = 0L;
+            return Optional.empty();
+        }
         Optional<RandomEvent> selected = select(context);
         selected.ifPresent(event -> {
+            currentEvent = event;
+            currentContext = context;
             executeActions(event.actions(), context);
             context.resetExecutionControl();
-            executeActions(event.endActions(), context);
+            if (event.durationSeconds() <= 0) {
+                executeActions(event.endActions(), context);
+                currentEvent = null;
+                currentContext = null;
+            } else {
+                currentEventEndsAtMillis = now + event.durationSeconds() * 1000L;
+            }
         });
         return selected;
+    }
+
+    public RandomEvent currentEvent() {
+        return currentEvent;
+    }
+
+    public long remainingNextEventSeconds() {
+        if (nextExecutionAtMillis <= 0L) return 0L;
+        return Math.max(0L, (nextExecutionAtMillis - System.currentTimeMillis() + 999L) / 1000L);
+    }
+
+    private long lineIntervalMillis() {
+        return intervalSeconds > 0 ? intervalSeconds * 1000L : 0L;
     }
 
     private void executeActions(List<EventAction> actions, EventContext context) {

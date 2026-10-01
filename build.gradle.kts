@@ -15,12 +15,16 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.faststats.dev/releases")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
     compileOnly("io.github.lijinhong11:MittelLib:1.4.6")
+
     compileOnly("org.bstats:bstats-bukkit:3.2.1")
+    compileOnly("dev.faststats.metrics:bukkit:0.30.2")
+
     compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnly("io.github.miniplaceholders:miniplaceholders-api:3.2.0")
 }

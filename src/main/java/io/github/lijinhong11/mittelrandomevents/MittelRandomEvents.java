@@ -1,5 +1,7 @@
 package io.github.lijinhong11.mittelrandomevents;
 
+import dev.faststats.ErrorTracker;
+import dev.faststats.bukkit.BukkitContext;
 import io.github.lijinhong11.mittellib.MittelLib;
 import io.github.lijinhong11.mittellib.configuration.MittelConfig;
 import io.github.lijinhong11.mittellib.message.SyncLanguageManager;
@@ -17,20 +19,37 @@ import io.github.lijinhong11.mittelrandomevents.task.TaskMaker;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.List;
 import lombok.Getter;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@Getter
 public class MittelRandomEvents extends JavaPlugin {
+    private final BukkitContext fastStats = new BukkitContext.Factory(this, "c19185b2b36f9b3d06094615d4902726")
+            .errorTrackerService(ErrorTracker.contextAware())
+            .metrics(dev.faststats.Metrics.Factory::create)
+            .create();
+
     @Getter
     private static MittelRandomEvents instance;
 
+    @Getter
     private SyncLanguageManager languageManager;
+
+    @Getter
     private TaskMaker taskMaker;
+
+    @Getter
     private RandomEventManager eventManager;
+
+    @Getter
     private RandomEventLineManager lineManager;
+
+    @Getter
     private RandomEventDataManager eventDataManager;
+
+    @Getter
     private RandomEventLineDataManager lineDataManager;
 
+    @Getter
     private MittelConfig pluginConfig;
 
     @Override
@@ -61,10 +80,17 @@ public class MittelRandomEvents extends JavaPlugin {
                 .register(MRECommands.get(), List.of("mre", "randomevents")));
 
         getLogger().info("MittelRandomEvents is enabled!");
+
+        new Metrics(this, 34430);
+        fastStats.ready();
+
+        // an updater here
     }
 
     @Override
     public void onDisable() {
+        fastStats.shutdown();
+
         if (taskMaker != null) {
             taskMaker.close();
         }
@@ -74,6 +100,7 @@ public class MittelRandomEvents extends JavaPlugin {
         if (eventDataManager != null) {
             eventDataManager.saveAndClose();
         }
+
         getLogger().info("MittelRandomEvents is disabled!");
     }
 

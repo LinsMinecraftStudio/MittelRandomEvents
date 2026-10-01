@@ -1,6 +1,7 @@
 package io.github.lijinhong11.mittelrandomevents.hook;
 
 import io.github.lijinhong11.mittellib.hook.placeholder.UniversalPlaceholderExpansion;
+import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
@@ -26,9 +27,29 @@ public final class MittelRandomEventsExpansion extends UniversalPlaceholderExpan
             RandomEvent event = event(args);
             return event == null ? "false" : String.valueOf(event.isEnabled());
         });
+        registerPlaceholder("event_display_name", PlaceholderType.GLOBAL, (viewer, target, args) -> {
+            RandomEvent event = event(args);
+            return event == null ? "" : ComponentUtils.serialize(event.getDisplayName());
+        });
         registerPlaceholder("line_running", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);
             return line == null ? "false" : String.valueOf(plugin.getTaskMaker().isRunning(line.id()));
+        });
+        registerPlaceholder("next_event_remaining", PlaceholderType.GLOBAL, (viewer, target, args) -> {
+            RandomEventLine line = line(args);
+            return line == null ? "0" : String.valueOf(line.remainingNextEventSeconds());
+        });
+        registerPlaceholder("current_event", PlaceholderType.GLOBAL, (viewer, target, args) -> {
+            RandomEventLine line = line(args);
+            return line == null || line.currentEvent() == null
+                    ? ""
+                    : line.currentEvent().id();
+        });
+        registerPlaceholder("current_event_display_name", PlaceholderType.GLOBAL, (viewer, target, args) -> {
+            RandomEventLine line = line(args);
+            return line == null || line.currentEvent() == null
+                    ? ""
+                    : ComponentUtils.serialize(line.currentEvent().getDisplayName());
         });
     }
 
