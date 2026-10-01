@@ -1,26 +1,24 @@
 package io.github.lijinhong11.mittelrandomevents.api.line;
 
+import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
+import io.github.lijinhong11.mittellib.utils.random.WeightedRandomMap;
 import io.github.lijinhong11.mittelrandomevents.api.Localized;
+import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
-import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
-import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -33,12 +31,16 @@ import org.jetbrains.annotations.Nullable;
 public class RandomEventLine implements Localized {
     @Getter
     private final @NotNull String id;
-    private final int intervalSeconds;
+
+    private int intervalSeconds;
+    private String cron;
     private final List<RandomEvent> events;
-    private final Map<RandomEvent, Double> weights = new HashMap<>();
+    private final WeightedRandomMap<String> weights = new WeightedRandomMap<>();
+
     @Getter
     @Setter
     private Material icon = Material.PAPER;
+
     @Getter
     @Setter
     private @NotNull Function<@Nullable CommandSender, Component> displayNameFunction;
@@ -53,8 +55,8 @@ public class RandomEventLine implements Localized {
      * @throws NullPointerException if the event collection is null
      */
     public RandomEventLine(@NotNull String id, int intervalSeconds, Collection<RandomEvent> events) {
-        if (id.isBlank()) {
-            throw new IllegalArgumentException("Line id must not be blank");
+        if (!id.matches("[a-z0-9_-]+")) {
+            throw new IllegalArgumentException("Line id must match [a-z0-9_-]+");
         }
 
         if (intervalSeconds < 0) {
@@ -62,12 +64,28 @@ public class RandomEventLine implements Localized {
         }
 
         this.id = id;
-        this.displayNameFunction = _ -> ComponentUtils.text(id);
+        this.displayNameFunction = sender -> ComponentUtils.text(id);
         this.intervalSeconds = intervalSeconds;
-        this.events = new ArrayList<>(events);
+        this.events = new ArrayList<>(Objects.requireNonNull(events, "events"));
         for (RandomEvent event : this.events) {
-            weights.put(event, 1.0D);
+            Objects.requireNonNull(event, "events must not contain null");
+            if (weights.containsKey(event.id())) {
+                throw new IllegalArgumentException("Duplicate event id in line: " + event.id());
+            }
+            weights.put(event.id(), 1.0D);
         }
+    }
+
+    /**
+     * Creates a line triggered by a Unix five-field Cron expression.
+     *
+     * @param id the stable line identifier
+     * @param cron the Unix Cron expression
+     * @param events the events initially available to this line
+     */
+    public RandomEventLine(@NotNull String id, @NotNull String cron, Collection<RandomEvent> events) {
+        this(id, 0, events);
+        setCron(cron);
     }
 
     /**
@@ -79,7 +97,10 @@ public class RandomEventLine implements Localized {
      * @param events the events attached to the line
      */
     public RandomEventLine(
-            String id, @NotNull Function<@Nullable CommandSender, Component> displayNameFunction, int intervalSeconds, Collection<RandomEvent> events) {
+            String id,
+            @NotNull Function<@Nullable CommandSender, Component> displayNameFunction,
+            int intervalSeconds,
+            Collection<RandomEvent> events) {
         this(id, intervalSeconds, events);
         this.displayNameFunction = displayNameFunction;
     }
@@ -93,20 +114,47 @@ public class RandomEventLine implements Localized {
         return intervalSeconds;
     }
 
+    /** Updates the fixed interval used when this line has no Cron expression. */
+    public void setIntervalSeconds(int intervalSeconds) {
+        if (intervalSeconds < 0) {
+            throw new IllegalArgumentException("Interval must not be negative");
+        }
+        this.intervalSeconds = intervalSeconds;
+    }
+
+    /** @return the configured Cron expression, or {@code null} for interval scheduling */
+    public String cron() {
+        return cron;
+    }
+
+    /**
+     * Sets the Unix five-field Cron expression. Setting {@code null} disables Cron scheduling.
+     * The expression is validated when the task is scheduled by MittelLib.
+     */
+    public void setCron(String cron) {
+        this.cron = cron == null ? null : Objects.requireNonNull(cron, "cron").trim();
+        if (this.cron != null && this.cron.isBlank()) {
+            throw new IllegalArgumentException("Cron expression must not be blank");
+        }
+    }
+
     /**
      * Returns the stable line identifier.
      *
      * @return the line identifier
      */
-    @Override public String id() {
+    @Override
+    public String id() {
         return id;
     }
 
-    @Override public Component displayName(@Nullable CommandSender sender) {
+    @Override
+    public Component displayName(@Nullable CommandSender sender) {
         return displayNameFunction.apply(sender);
     }
 
-    @Override public Material icon() {
+    @Override
+    public Material icon() {
         return icon;
     }
 
@@ -125,8 +173,12 @@ public class RandomEventLine implements Localized {
      * @param event the event to add
      */
     public void addEvent(RandomEvent event) {
+        Objects.requireNonNull(event, "event");
+        if (events.stream().anyMatch(existing -> existing.id().equals(event.id()))) {
+            throw new IllegalArgumentException("Event id is already registered in this line: " + event.id());
+        }
         events.add(event);
-        weights.putIfAbsent(event, 1.0D);
+        weights.put(event.id(), 1.0D);
     }
 
     /**
@@ -150,7 +202,7 @@ public class RandomEventLine implements Localized {
      */
     public void removeEvent(RandomEvent event) {
         events.remove(event);
-        weights.remove(event);
+        weights.remove(event.id());
     }
 
     /**
@@ -167,7 +219,11 @@ public class RandomEventLine implements Localized {
         if (weight < 0.0D || !Double.isFinite(weight)) {
             throw new IllegalArgumentException("Weight must be finite and non-negative");
         }
-        weights.put(event, weight);
+        if (weight == 0.0D) {
+            weights.remove(event.id());
+        } else {
+            weights.put(event.id(), weight);
+        }
     }
 
     /**
@@ -177,7 +233,7 @@ public class RandomEventLine implements Localized {
      * @return the configured weight, or zero when the event is not attached
      */
     public double weightOf(RandomEvent event) {
-        return weights.getOrDefault(event, 0.0D);
+        return weights.getWeight(event.id());
     }
 
     /**
@@ -187,23 +243,23 @@ public class RandomEventLine implements Localized {
      * @return the selected event, or empty when no eligible event has a positive weight
      */
     public Optional<RandomEvent> select(EventContext context) {
+        Objects.requireNonNull(context, "context");
         List<RandomEvent> candidates = events.stream()
                 .filter(event -> event.isCompatible(context))
                 .filter(event -> weightOf(event) > 0.0D)
                 .toList();
-        double totalWeight = candidates.stream().mapToDouble(this::weightOf).sum();
-        if (totalWeight <= 0.0D) {
+        if (candidates.isEmpty()) {
             return Optional.empty();
         }
 
-        double selected = context.getRandom().nextDouble() * totalWeight;
+        WeightedRandomMap<String> candidatesById = new WeightedRandomMap<>();
         for (RandomEvent event : candidates) {
-            selected -= weightOf(event);
-            if (selected < 0.0D) {
-                return Optional.of(event);
-            }
+            candidatesById.put(event.id(), weightOf(event));
         }
-        return Optional.empty();
+        String selectedId = candidatesById.randomOne();
+        return candidates.stream()
+                .filter(event -> event.id().equals(selectedId))
+                .findFirst();
     }
 
     /**
@@ -215,16 +271,36 @@ public class RandomEventLine implements Localized {
      * @throws RuntimeException if an action type fails during execution
      */
     public Optional<RandomEvent> execute(EventContext context) {
+        Objects.requireNonNull(context, "context");
         Optional<RandomEvent> selected = select(context);
-        selected.ifPresent(event -> event.actions().forEach(action -> execute(action, context)));
+        selected.ifPresent(event -> {
+            executeActions(event.actions(), context);
+            context.resetExecutionControl();
+            executeActions(event.endActions(), context);
+        });
         return selected;
+    }
+
+    private void executeActions(List<EventAction> actions, EventContext context) {
+        for (EventAction action : actions) {
+            if (context.isStopped()) {
+                break;
+            }
+            if (context.consumeSkipNext()) {
+                continue;
+            }
+            if (!action.conditions().stream().allMatch(condition -> condition.test(context))) {
+                continue;
+            }
+            execute(action, context);
+        }
     }
 
     private void execute(EventAction action, EventContext context) {
         // All actions receive this same context, allowing earlier actions to prepare later ones.
-        context.manager().getActionType(action.type()).ifPresentOrElse(
-                actionType -> actionType.execute(action, context),
-                () -> throwUnknownAction(action));
+        context.manager()
+                .getActionType(action.type())
+                .ifPresentOrElse(actionType -> actionType.execute(action, context), () -> throwUnknownAction(action));
     }
 
     private void throwUnknownAction(EventAction action) {

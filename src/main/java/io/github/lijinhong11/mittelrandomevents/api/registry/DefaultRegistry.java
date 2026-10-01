@@ -34,7 +34,8 @@ class DefaultRegistry<T> implements Registry<T> {
      * @param value the value to register
      * @throws IllegalArgumentException if the value is null or its resolved ID is null or blank
      */
-    @Override public void register(T value) {
+    @Override
+    public void register(T value) {
         if (value == null) {
             throw new IllegalArgumentException("Registry value must not be null");
         }
@@ -50,10 +51,10 @@ class DefaultRegistry<T> implements Registry<T> {
      *
      * @param id the value ID
      */
-    @Override public void unregister(String id) {
+    @Override
+    public void unregister(String id) {
         values.remove(id);
     }
-
 
     /**
      * Looks up a value by ID.
@@ -61,7 +62,8 @@ class DefaultRegistry<T> implements Registry<T> {
      * @param id the value ID
      * @return the value when registered
      */
-    @Override public Optional<T> get(String id) {
+    @Override
+    public Optional<T> get(String id) {
         return Optional.ofNullable(values.get(id));
     }
 
@@ -70,14 +72,16 @@ class DefaultRegistry<T> implements Registry<T> {
      *
      * @return registered values in insertion order
      */
-    @Override public Collection<T> values() {
+    @Override
+    public Collection<T> values() {
         return Collections.unmodifiableCollection(values.values());
     }
 
     /**
      * Removes all registered values.
      */
-    @Override public void clear() {
+    @Override
+    public void clear() {
         values.clear();
     }
 }

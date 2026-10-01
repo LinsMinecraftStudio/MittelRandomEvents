@@ -1,0 +1,311 @@
+command:
+  about:
+    name: "MittelRandomEvents %version%"
+    description: "随机事件与事件线管理插件。"
+  reload:
+    success: "随机事件和事件线已重新加载。"
+  error:
+    material: "未知的物品材质。"
+    unknown: "未知的%type%。"
+  events:
+    list: "事件（%count%）：%events%"
+    info: "事件 %id% 启用=%enabled% 动作=%actions% 条件=%conditions%"
+    exists: "事件已存在。"
+    create: "已创建事件 %id%。"
+    delete: "已删除事件 %id%。"
+    set:
+      enabled: "已更新事件启用状态。"
+      display-name: "已更新事件显示名称。"
+      icon: "已更新事件图标。"
+  lines:
+    list: "事件线（%count%）：%lines%"
+    info: "事件线 %id% 间隔=%interval% Cron=%cron% 事件数=%events% 运行中=%running%"
+    exists: "事件线已存在。"
+    create: "已创建事件线 %id%。"
+    delete: "已删除事件线 %id%。"
+    add-event:
+      exists: "该事件已经添加到事件线。"
+      success: "已将事件 %event% 添加到事件线 %line%。"
+    set:
+      interval: "已更新事件线间隔。"
+      cron: "已更新事件线 Cron 表达式。"
+      display-name: "已更新事件线显示名称。"
+      icon: "已更新事件线图标。"
+    start: "已启动事件线 %id%。"
+    stop: "已停止事件线 %id%。"
+    run: "已单次运行事件线 %id%。"
+gui:
+  home:
+    title: "<#D7B769><bold>MittelRandomEvents</bold>"
+    events:
+      name: "<#E5C779>随机事件"
+      lore:
+        - "<#A7BC9C>管理随机事件"
+    lines:
+      name: "<#E5C779>随机事件线"
+      lore:
+        - "<#A7BC9C>管理随机事件线"
+  common:
+    close: "<red>关闭"
+    back: "<red>返回"
+    next: "<yellow>下一页"
+    previous: "<yellow>上一页"
+    create: "<green>创建"
+    rename: "<yellow>重命名"
+    rename-title: "<gold>重命名"
+    rename-label: "<gray>请输入新的显示名称。"
+    right-click-delete: "<red>右键删除。"
+    icon: "<yellow>显示图标"
+    type: "<gray>类型：<white>%value%"
+    parameters: "<gray>参数：<white>%value%"
+    parameter: "<yellow>%value%"
+    value: "<gray>值：<white>%value%"
+    id: "<gray>ID：<white>%value%"
+    weight: "<gray>权重：<white>%value%"
+    enabled: "<gray>已启用：<white>%value%"
+    actions-count: "<gray>动作数：<white>%value%"
+    events-count: "<gray>事件数：<white>%value%"
+    running: "<gray>运行中：<white>%value%"
+    unknown-type: "<red>未知类型：%value%"
+  items:
+    close:
+      name: "<red>关闭"
+      lore: []
+    back:
+      name: "<red>返回"
+      lore: []
+    previous:
+      name: "<yellow>上一页"
+      lore: []
+    next:
+      name: "<yellow>下一页"
+      lore: []
+    create:
+      name: "<green>创建"
+      lore: []
+    enable:
+      name: "<green>启用"
+      lore: []
+    disable:
+      name: "<red>禁用"
+      lore: []
+    rename:
+      name: "<yellow>重命名"
+      lore: []
+    icon:
+      name: "<yellow>显示图标"
+      lore: []
+    actions:
+      name: "<yellow>执行时动作"
+      lore: []
+    end-actions:
+      name: "<yellow>结束时动作"
+      lore: []
+    conditions:
+      name: "<yellow>条件"
+      lore: []
+    start:
+      name: "<green>启动"
+      lore: []
+    stop:
+      name: "<red>停止"
+      lore: []
+    run:
+      name: "<yellow>运行一次"
+      lore: []
+    events:
+      name: "<yellow>事件与权重"
+      lore: []
+    interval:
+      name: "<yellow>运行间隔"
+      lore: []
+    cron:
+      name: "<yellow>Cron 调度"
+      lore: []
+    no-parameters:
+      name: "<gray>该动作没有参数。"
+      lore: []
+  objects:
+    event:
+      name: "%name%"
+      lore:
+        - "<gray>已启用：<white>%enabled%"
+        - "<gray>动作数：<white>%actions%"
+    line:
+      name: "%name%"
+      lore:
+        - "<gray>事件数：<white>%events%"
+        - "<gray>运行中：<white>%running%"
+    action:
+      name: "%name%"
+      lore:
+        - "<gray>类型：<white>%type%"
+        - "<gray>参数：<white>%parameters%"
+        - "<red>右键删除"
+    action-template:
+      name: "%name%"
+      lore:
+        - "%description%"
+        - "<gray>参数：<white>%parameters%"
+    action-template-no-parameters:
+      name: "%name%"
+      lore:
+        - "%description%"
+    condition:
+      name: "%name%"
+      lore:
+        - "<gray>类型：<white>%type%"
+        - "<gray>参数：<white>%parameters%"
+        - "<red>右键删除"
+    condition-template:
+      name: "%name%"
+      lore:
+        - "<gray>类型：<white>%type%"
+        - "<gray>参数：<white>%parameters%"
+    parameter:
+      name: "<yellow>%name%"
+      lore:
+        - "<gray>值：<white>%value%"
+    line-event:
+      name: "%name%"
+      lore:
+        - "<gray>ID：<white>%id%"
+        - "<gray>权重：<white>%weight%"
+        - "<gray>左键设置权重，右键移除"
+  events:
+    title: "<gold>随机事件"
+    management:
+      title: "<gold>事件：%id%"
+      enable: "<green>启用"
+      disable: "<red>禁用"
+      actions: "<yellow>动作"
+      conditions: "<yellow>条件"
+    create:
+      title: "创建事件"
+      label: "请输入事件 ID。"
+  lines:
+    title: "<gold>随机事件线"
+    management:
+      title: "<gold>事件线：%id%"
+      start: "<green>启动"
+      stop: "<red>停止"
+      run: "<yellow>运行一次"
+      events: "<yellow>事件与权重"
+      interval: "<yellow>运行间隔"
+      cron: "<yellow>Cron 调度"
+    create:
+      title: "创建事件线"
+      label: "请输入事件线 ID。"
+    interval-title: "设置运行间隔"
+    interval-label: "运行间隔秒数，0 表示禁用"
+    cron-title: "设置 Cron 调度"
+    cron-label: "Unix 五字段表达式，留空表示禁用"
+  actions:
+    start-title: "<gold>执行时动作"
+    end-title: "<gold>结束时动作"
+    chooser-title: "<gold>选择动作"
+    parameters-title: "<gold>动作参数"
+    conditions-title: "<gold>动作条件"
+    no-parameters: "<gray>该动作没有参数。"
+    parameter-title: "<gold>设置参数"
+  line-events:
+    title: "<gold>事件线事件"
+    chooser-title: "<gold>选择事件"
+    hint: "<gray>左键设置权重，右键移除。"
+    weight-title: "<gold>设置权重"
+    weight-label: "<gray>事件选择权重"
+  conditions:
+    title: "<gold>事件条件"
+    chooser-title: "<gold>选择条件"
+    parameters-title: "<gold>条件参数"
+    parameter-title: "<gold>设置条件参数"
+mre:
+  action:
+    select_players:
+      name: "选择玩家"
+      description: "选择后续动作使用的在线玩家"
+    select_worlds:
+      name: "选择世界"
+      description: "选择后续动作使用的已加载世界"
+    clear_players:
+      name: "清空玩家选择"
+      description: "清除已选择的玩家"
+    clear_worlds:
+      name: "清空世界选择"
+      description: "清除已选择的世界"
+    message_players:
+      name: "发送玩家消息"
+      description: "向选中的玩家发送消息文本"
+    broadcast:
+      name: "全服广播"
+      description: "向服务器广播消息文本"
+    execute_console_command:
+      name: "执行控制台命令"
+      description: "以控制台身份执行命令；支持使用 {参数名}、${参数名} 或 %参数名% 插入参数容器中的变量"
+    execute_player_command:
+      name: "玩家命令"
+      description: "以每个选中玩家身份执行命令"
+    heal_players:
+      name: "治疗玩家"
+      description: "治疗选中的玩家"
+    damage_players:
+      name: "伤害玩家"
+      description: "对选中的玩家造成伤害"
+    clear_inventories:
+      name: "清空背包"
+      description: "清空选中玩家的背包"
+    play_sound:
+      name: "播放声音"
+      description: "为选中的玩家播放声音"
+    set_weather:
+      name: "设置天气"
+      description: "修改选中世界的天气"
+    stop_actions:
+      name: "停止后续动作"
+      description: "停止执行当前事件剩余动作"
+    skip_next_action:
+      name: "跳过下个动作"
+      description: "跳过当前事件的下一个动作"
+  condition:
+    players:
+      name: "玩家数量"
+      description: "检查已选择的玩家数量"
+    worlds:
+      name: "世界数量"
+      description: "检查已选择的世界数量"
+    player_permission:
+      name: "玩家权限"
+      description: "检查已选择的玩家是否拥有权限"
+    world:
+      name: "世界"
+      description: "检查是否选择了指定世界"
+    player_name_contains:
+      name: "玩家名称包含"
+      description: "检查已选择的玩家名称"
+    world_name_contains:
+      name: "世界名称包含"
+      description: "检查已选择的世界名称"
+    server_online_players:
+      name: "服务器在线玩家"
+      description: "检查服务器在线玩家数量"
+    server_plugin_enabled:
+      name: "插件已启用"
+      description: "检查插件是否已启用"
+    server_plugin_disabled:
+      name: "插件已禁用"
+      description: "检查插件是否已禁用"
+    server_version_contains:
+      name: "服务器版本包含"
+      description: "检查服务器版本文本"
+    server_tps:
+      name: "服务器 TPS"
+      description: "检查服务器 TPS"
+    not:
+      name: "条件取反"
+      description: "反转嵌套条件的判断结果"
+    all_of:
+      name: "全部条件"
+      description: "所有嵌套条件通过时成立"
+    any_of:
+      name: "任一条件"
+      description: "至少一个嵌套条件通过时成立"

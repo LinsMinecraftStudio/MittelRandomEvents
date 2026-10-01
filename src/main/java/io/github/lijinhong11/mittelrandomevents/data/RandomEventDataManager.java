@@ -1,16 +1,18 @@
 package io.github.lijinhong11.mittelrandomevents.data;
 
+import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
+import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
+import io.github.lijinhong11.mittelrandomevents.api.event.ParameterContainer;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
-import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
-import io.github.lijinhong11.mittelrandomevents.builtin.BuiltInEventConditionLoader;
-import org.bukkit.configuration.ConfigurationSection;
-
+import io.github.lijinhong11.mittelrandomevents.utils.RegistryUtils;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.Registry;
+import org.bukkit.configuration.ConfigurationSection;
 
 /**
  * Reads and saves {@link RandomEvent} objects from {@code data/events.yml}.
@@ -30,76 +32,93 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         }
     }
 
-    @Override protected RandomEvent read(ConfigurationSection section) {
+    @Override
+    protected RandomEvent read(ConfigurationSection section) {
+        List<Map<?, ?>> rawActions = section.getMapList("start-actions");
+        if (rawActions.isEmpty()) {
+            rawActions = section.getMapList("actions");
+        }
+        List<EventAction> actions = readActions(rawActions);
+        List<EventAction> endActions = readActions(section.getMapList("end-actions"));
+        RandomEvent event = new RandomEvent(section.getName(), actions, endActions);
+        String displayName = section.getString("display-name");
+        if (displayName != null) {
+            event.setDisplayName(ComponentUtils.deserialize(displayName));
+        }
+        event.setEnabled(section.getBoolean("enabled", true));
+        event.setIcon(material(section.getString("icon"), event.getIcon()));
+        List<EventCondition> conditions = new ArrayList<>();
+        for (Map<?, ?> rawCondition : section.getMapList("conditions")) {
+            conditions.add(EventConditionCodec.decode(rawCondition));
+        }
+        event.setConditions(conditions);
+        return event;
+    }
+
+    private static List<EventAction> readActions(List<Map<?, ?>> rawActions) {
         List<EventAction> actions = new ArrayList<>();
-        for (Map<?, ?> rawAction : section.getMapList("actions")) {
+        for (Map<?, ?> rawAction : rawActions) {
             Object rawType = rawAction.get("type");
             if (rawType == null) continue;
             Map<String, Object> parameters = new LinkedHashMap<>();
             if (rawAction.get("parameters") instanceof Map<?, ?> map) {
                 map.forEach((key, value) -> parameters.put(String.valueOf(key), value));
             }
-            actions.add(new EventAction(String.valueOf(rawType), parameters));
-        }
-        RandomEvent event = new RandomEvent(section.getName(), actions);
-        String displayName = section.getString("display-name");
-        if (displayName != null) {
-            event.setDisplayName(io.github.lijinhong11.mittellib.utils.components.ComponentUtils.deserialize(displayName));
-        }
-        event.setEnabled(section.getBoolean("enabled", true));
-        event.setIcon(material(section.getString("icon"), event.getIcon()));
-        List<EventCondition> conditions = new ArrayList<>();
-        for (Map<?, ?> rawCondition : section.getMapList("conditions")) {
-            Object rawType = rawCondition.get("type");
-            if (rawType == null) {
-                continue;
-            }
-            Map<String, Object> parameters = new LinkedHashMap<>();
-            if (rawCondition.get("parameters") instanceof Map<?, ?> map) {
-                map.forEach((key, value) -> parameters.put(String.valueOf(key), value));
-            }
-            try {
-                EventCondition condition = BuiltInEventConditionLoader.load(
-                        String.valueOf(rawType), parameters);
-                if (condition != null) {
-                    conditions.add(condition);
+            List<EventCondition> actionConditions = new ArrayList<>();
+            if (rawAction.get("conditions") instanceof Iterable<?> rawConditions) {
+                for (Object rawCondition : rawConditions) {
+                    if (rawCondition instanceof Map<?, ?> map) {
+                        actionConditions.add(EventConditionCodec.decode(map));
+                    }
                 }
-            } catch (IllegalArgumentException exception) {
-                // Invalid conditions do not prevent other events from loading.
             }
+            actions.add(new EventAction(String.valueOf(rawType), new ParameterContainer(parameters), actionConditions));
         }
-        event.setConditions(conditions);
-        return event;
+        return actions;
     }
 
-    @Override protected void write(ConfigurationSection section, RandomEvent event) {
+    @Override
+    protected void write(ConfigurationSection section, RandomEvent event) {
         section.set("enabled", event.isEnabled());
-        section.set("display-name", io.github.lijinhong11.mittellib.utils.components.ComponentUtils.serialize(event.getDisplayName()));
+        section.set("display-name", ComponentUtils.serialize(event.getDisplayName()));
         section.set("icon", event.getIcon().name());
-        section.set("conditions", event.conditions().stream()
-                .filter(condition -> condition.type() != null)
-                .map(condition -> {
+        section.set(
+                "conditions",
+                event.conditions().stream().map(EventConditionCodec::encode).toList());
+        section.set("start-actions", encodeActions(event.actions()));
+        section.set("end-actions", encodeActions(event.endActions()));
+    }
+
+    private static List<Map<String, Object>> encodeActions(List<EventAction> actions) {
+        return actions.stream()
+                .map(action -> {
                     Map<String, Object> values = new LinkedHashMap<>();
-                    values.put("type", condition.type());
-                    values.put("parameters", condition.parameters());
+                    values.put("type", action.type());
+                    values.put("parameters", action.parameters().asMap());
+                    values.put(
+                            "conditions",
+                            action.conditions().stream()
+                                    .map(EventConditionCodec::encode)
+                                    .toList());
                     return values;
                 })
-                .toList());
-        section.set("actions", event.actions().stream().map(action -> {
-            Map<String, Object> values = new LinkedHashMap<>();
-            values.put("type", action.type());
-            values.put("parameters", action.parameters());
-            return values;
-        }).toList());
+                .toList();
     }
 
-    @Override public void reloadData() {
+    @Override
+    public void reloadData() {
         eventManager.eventsRegistry().clear();
         reloadConfiguration();
         loadData();
     }
 
-    @Override public void saveAndClose() {
+    @Override
+    public void saveAndClose() {
+        saveData();
+    }
+
+    public void saveData() {
+        clearConfiguration();
         for (RandomEvent event : eventManager.events()) write(event.id(), event);
         saveConfiguration();
     }
@@ -108,7 +127,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         if (value == null) {
             return fallback;
         }
-        org.bukkit.Material material = org.bukkit.Material.matchMaterial(value);
+        org.bukkit.Material material = RegistryUtils.get(Registry.MATERIAL, value);
         return material == null ? fallback : material;
     }
 }

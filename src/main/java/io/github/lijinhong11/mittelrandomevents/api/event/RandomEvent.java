@@ -3,16 +3,15 @@ package io.github.lijinhong11.mittelrandomevents.api.event;
 import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.api.Localized;
 import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
 import org.bukkit.Material;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Collections;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Data belonging to one random event.
@@ -24,17 +23,19 @@ import java.util.Collections;
  */
 public class RandomEvent implements Localized {
     private final String id;
-    @Setter
     private List<EventAction> actions;
+    private List<EventAction> endActions;
+
     @Setter
     @Getter
     private boolean enabled = true;
+
     private List<EventCondition> conditions = List.of();
+
     @Getter
     @Setter
     private Material icon = Material.PAPER;
-    @Getter
-    @Setter
+
     @Getter
     @Setter
     private @NotNull Component displayName;
@@ -58,12 +59,16 @@ public class RandomEvent implements Localized {
      * @throws NullPointerException if the action collection or one of its actions is null
      */
     public RandomEvent(String id, Collection<? extends EventAction> actions) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Event id must not be blank");
-        }
+        this(id, actions, List.of());
+    }
+
+    public RandomEvent(
+            String id, Collection<? extends EventAction> actions, Collection<? extends EventAction> endActions) {
+        validateId(id);
 
         this.id = id;
         this.actions = List.copyOf(actions);
+        this.endActions = List.copyOf(endActions);
         this.displayName = ComponentUtils.text(id);
     }
 
@@ -77,12 +82,19 @@ public class RandomEvent implements Localized {
      * @throws NullPointerException if the action collection or one of its actions is null
      */
     public RandomEvent(String id, Component displayName, Collection<? extends EventAction> actions) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Event id must not be blank");
-        }
+        this(id, displayName, actions, List.of());
+    }
+
+    public RandomEvent(
+            String id,
+            Component displayName,
+            Collection<? extends EventAction> actions,
+            Collection<? extends EventAction> endActions) {
+        validateId(id);
 
         this.id = id;
         this.actions = List.copyOf(actions);
+        this.endActions = List.copyOf(endActions);
         this.displayName = displayName;
     }
 
@@ -91,15 +103,18 @@ public class RandomEvent implements Localized {
      *
      * @return the event identifier
      */
-    @Override public String id() {
+    @Override
+    public String id() {
         return id;
     }
 
-    @Override public Component displayName(org.bukkit.command.CommandSender sender) {
+    @Override
+    public Component displayName(org.bukkit.command.CommandSender sender) {
         return displayName;
     }
 
-    @Override public Material icon() {
+    @Override
+    public Material icon() {
         return icon;
     }
 
@@ -110,6 +125,70 @@ public class RandomEvent implements Localized {
      */
     public List<EventAction> actions() {
         return actions;
+    }
+
+    public List<EventAction> endActions() {
+        return endActions;
+    }
+
+    public void setActions(Collection<? extends EventAction> actions) {
+        this.actions = List.copyOf(actions);
+    }
+
+    public void setEndActions(Collection<? extends EventAction> actions) {
+        this.endActions = List.copyOf(actions);
+    }
+
+    public void addAction(EventAction action) {
+        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        updated.add(Objects.requireNonNull(action, "action"));
+        actions = List.copyOf(updated);
+    }
+
+    public void addEndAction(EventAction action) {
+        List<EventAction> updated = new java.util.ArrayList<>(endActions);
+        updated.add(Objects.requireNonNull(action, "action"));
+        endActions = List.copyOf(updated);
+    }
+
+    public void removeAction(int index) {
+        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        updated.remove(index);
+        actions = List.copyOf(updated);
+    }
+
+    public boolean removeAction(EventAction action) {
+        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        if (!updated.remove(action)) {
+            return false;
+        }
+        actions = List.copyOf(updated);
+        return true;
+    }
+
+    public boolean removeEndAction(EventAction action) {
+        List<EventAction> updated = new java.util.ArrayList<>(endActions);
+        if (!updated.remove(action)) return false;
+        endActions = List.copyOf(updated);
+        return true;
+    }
+
+    public void removeCondition(int index) {
+        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        updated.remove(index);
+        conditions = List.copyOf(updated);
+    }
+
+    public void addCondition(EventCondition condition) {
+        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        updated.add(Objects.requireNonNull(condition, "condition"));
+        setConditions(updated);
+    }
+
+    public void setCondition(int index, EventCondition condition) {
+        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        updated.set(index, Objects.requireNonNull(condition, "condition"));
+        setConditions(updated);
     }
 
     /**
@@ -128,7 +207,13 @@ public class RandomEvent implements Localized {
      * @throws NullPointerException if the collection or one of its conditions is null
      */
     public void setConditions(Collection<EventCondition> conditions) {
-        this.conditions = List.copyOf(conditions);
+        List<EventCondition> copied = List.copyOf(conditions);
+        for (EventCondition condition : copied) {
+            if (condition.type() == null || condition.type().isBlank()) {
+                throw new IllegalArgumentException("Event conditions must be serializable");
+            }
+        }
+        this.conditions = copied;
     }
 
     /**
@@ -141,7 +226,8 @@ public class RandomEvent implements Localized {
         return enabled && conditions.stream().allMatch(condition -> condition.test(context));
     }
 
-    @Override public boolean equals(Object object) {
+    @Override
+    public boolean equals(Object object) {
         if (this == object) {
             return true;
         }
@@ -151,7 +237,14 @@ public class RandomEvent implements Localized {
         return id.equals(other.id);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return Objects.hash(id);
+    }
+
+    private static void validateId(String id) {
+        if (id == null || !id.matches("[a-z0-9_-]+")) {
+            throw new IllegalArgumentException("Event id must match [a-z0-9_-]+");
+        }
     }
 }

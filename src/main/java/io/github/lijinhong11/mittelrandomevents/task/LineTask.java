@@ -3,7 +3,6 @@ package io.github.lijinhong11.mittelrandomevents.task;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-
 import java.util.function.Supplier;
 
 class LineTask extends AbstractTask {
@@ -15,7 +14,8 @@ class LineTask extends AbstractTask {
         this.contextSupplier = contextSupplier;
     }
 
-    @Override protected void run(ScheduledTask task) {
+    @Override
+    protected void run(ScheduledTask task) {
         EventContext context = contextSupplier.get();
         if (context != null) {
             line.execute(context);

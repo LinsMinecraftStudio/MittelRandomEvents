@@ -2,14 +2,13 @@ package io.github.lijinhong11.mittelrandomevents.api;
 
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.action.ActionType;
+import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
 import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
-
 import java.util.Optional;
 import java.util.function.Supplier;
-import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 
 /**
  * Stable convenience API for integrations with other plugins.
@@ -109,8 +108,7 @@ public final class MittelRandomEventsAPI {
      * @param line the line to register and schedule
      * @param contextSupplier the factory for execution contexts
      */
-    public static void registerLine(
-            RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
+    public static void registerLine(RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
         MittelRandomEvents plugin = plugin();
         RandomEventLineManager manager = plugin.getLineManager();
         manager.get(line.id()).ifPresent(existing -> plugin.getTaskMaker().cancelLine(existing.id()));

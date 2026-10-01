@@ -1,6 +1,8 @@
 package io.github.lijinhong11.mittelrandomevents.builtin;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
+import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
+import java.util.Map;
 
 /**
  * Conditions backed by optional placeholder provider plugins.
@@ -22,9 +24,10 @@ public final class OptionalBuiltInEventCondition {
          * @return the condition
          */
         public static EventCondition equals(String placeholder, String expected) {
-            return context -> context.getSelectedPlayers().stream()
-                    .map(player -> PlaceholderApiResolver.resolve(placeholder, player, context))
-                    .anyMatch(expected::equals);
+            return configured(
+                    "placeholder_player_equals", placeholder, expected, context -> context.getSelectedPlayers().stream()
+                            .map(player -> PlaceholderApiResolver.resolve(placeholder, player, context))
+                            .anyMatch(expected::equals));
         }
 
         /**
@@ -35,7 +38,10 @@ public final class OptionalBuiltInEventCondition {
          * @return the condition
          */
         public static EventCondition serverEquals(String placeholder, String expected) {
-            return context -> PlaceholderApiResolver.resolve(placeholder, context).equals(expected);
+            return configured(
+                    "placeholder_server_equals", placeholder, expected, context -> PlaceholderApiResolver.resolve(
+                                    placeholder, context)
+                            .equals(expected));
         }
     }
 
@@ -53,9 +59,33 @@ public final class OptionalBuiltInEventCondition {
          * @return the condition
          */
         public static EventCondition equals(String placeholder, String expected) {
-            return context -> context.getSelectedPlayers().stream()
-                    .map(player -> MiniPlaceholdersResolver.resolve(placeholder, player, context))
-                    .anyMatch(expected::equals);
+            return configured(
+                    "mini_placeholder_player_equals",
+                    placeholder,
+                    expected,
+                    context -> context.getSelectedPlayers().stream()
+                            .map(player -> MiniPlaceholdersResolver.resolve(placeholder, player, context))
+                            .anyMatch(expected::equals));
         }
+    }
+
+    private static EventCondition configured(
+            String type, String placeholder, String expected, EventCondition delegate) {
+        return new EventCondition() {
+            @Override
+            public String type() {
+                return type;
+            }
+
+            @Override
+            public Map<String, Object> parameters() {
+                return Map.of("placeholder", placeholder, "expected", expected);
+            }
+
+            @Override
+            public boolean test(EventContext context) {
+                return delegate.test(context);
+            }
+        };
     }
 }

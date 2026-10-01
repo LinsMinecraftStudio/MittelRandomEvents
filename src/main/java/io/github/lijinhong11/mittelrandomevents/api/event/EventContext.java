@@ -1,10 +1,10 @@
 package io.github.lijinhong11.mittelrandomevents.api.event;
 
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-
+import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
 import java.util.Collection;
 import java.util.Random;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 /**
  * Runtime data supplied to conditions and action types while a random event is being processed.
@@ -68,20 +68,30 @@ public interface EventContext {
     long elapsedMillis();
 
     /**
-     * Reads a value from the context's shared runtime data.
+     * Returns the mutable parameter container shared by the current action chain.
      *
-     * @param key the data key
-     * @param <T> the expected value type
-     * @return the stored value, or {@code null} when no value is stored for the key
+     * <p>Action configuration and runtime values use the same container abstraction. An action may
+     * read its own {@link EventAction#parameters()}
+     * and write values to this context container for following actions.
      */
-    <T> T get(String key);
+    ParameterContainer parameters();
+
+    /** Stops the remaining actions in the current event action chain. */
+    void stop();
+
+    /** Marks the next action in the current event action chain to be skipped. */
+    void skipNext();
+
+    /** Returns whether the current event action chain has been stopped. */
+    boolean isStopped();
 
     /**
-     * Stores a value in the context's shared runtime data.
+     * Consumes the pending skip marker for the next action.
      *
-     * @param key the data key
-     * @param value the value to store
-     * @param <T> the value type
+     * @return {@code true} when the next action should be skipped
      */
-    <T> void set(String key, T value);
+    boolean consumeSkipNext();
+
+    /** Resets action control state before starting another action phase. */
+    void resetExecutionControl();
 }

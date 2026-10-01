@@ -2,10 +2,10 @@ package io.github.lijinhong11.mittelrandomevents.builtin;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
-import org.bukkit.World;
-import org.bukkit.Bukkit;
 import java.util.Collection;
 import java.util.Map;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 
 /**
  * Factory methods for conditions shipped with MittelRandomEvents.
@@ -36,7 +36,9 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition players(int minimum, int maximum) {
         validateRange(minimum, maximum, "players");
-        return configured("players", Map.of("min", minimum, "max", maximum),
+        return configured(
+                "players",
+                Map.of("min", minimum, "max", maximum),
                 context -> inRange(context.getSelectedPlayers().size(), minimum, maximum));
     }
 
@@ -61,7 +63,9 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition worlds(int minimum, int maximum) {
         validateRange(minimum, maximum, "worlds");
-        return configured("worlds", Map.of("min", minimum, "max", maximum),
+        return configured(
+                "worlds",
+                Map.of("min", minimum, "max", maximum),
                 context -> inRange(context.getSelectedWorlds().size(), minimum, maximum));
     }
 
@@ -76,8 +80,8 @@ public final class BuiltInEventCondition {
         if (permission == null || permission.isBlank()) {
             throw new IllegalArgumentException("Permission must not be blank");
         }
-        return configured("player_permission", Map.of("permission", permission),
-                context -> context.getSelectedPlayers().stream()
+        return configured(
+                "player_permission", Map.of("permission", permission), context -> context.getSelectedPlayers().stream()
                         .anyMatch(player -> player.hasPermission(permission)));
     }
 
@@ -92,10 +96,9 @@ public final class BuiltInEventCondition {
         if (worldName == null || worldName.isBlank()) {
             throw new IllegalArgumentException("World name must not be blank");
         }
-        return configured("world", Map.of("name", worldName),
-                context -> context.getSelectedWorlds().stream()
-                        .map(World::getName)
-                        .anyMatch(worldName::equals));
+        return configured("world", Map.of("name", worldName), context -> context.getSelectedWorlds().stream()
+                .map(World::getName)
+                .anyMatch(worldName::equals));
     }
 
     /**
@@ -103,8 +106,8 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition playerNameContains(String text) {
         requireText(text, "Player name text");
-        return configured("player_name_contains", Map.of("value", text),
-                context -> context.getSelectedPlayers().stream()
+        return configured(
+                "player_name_contains", Map.of("value", text), context -> context.getSelectedPlayers().stream()
                         .anyMatch(player -> player.getName().contains(text)));
     }
 
@@ -116,9 +119,8 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition worldNameContains(String text) {
         requireText(text, "World name text");
-        return configured("world_name_contains", Map.of("value", text),
-                context -> context.getSelectedWorlds().stream()
-                        .anyMatch(world -> world.getName().contains(text)));
+        return configured("world_name_contains", Map.of("value", text), context -> context.getSelectedWorlds().stream()
+                .anyMatch(world -> world.getName().contains(text)));
     }
 
     /**
@@ -141,7 +143,9 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition serverOnlinePlayers(int minimum, int maximum) {
         validateRange(minimum, maximum, "online players");
-        return configured("server_online_players", Map.of("min", minimum, "max", maximum),
+        return configured(
+                "server_online_players",
+                Map.of("min", minimum, "max", maximum),
                 context -> inRange(Bukkit.getOnlinePlayers().size(), minimum, maximum));
     }
 
@@ -164,8 +168,8 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition serverPluginEnabled(String pluginName) {
         requireText(pluginName, "Plugin name");
-        return configured("server_plugin_enabled", Map.of("name", pluginName),
-                context -> Bukkit.getPluginManager().isPluginEnabled(pluginName));
+        return configured("server_plugin_enabled", Map.of("name", pluginName), context -> Bukkit.getPluginManager()
+                .isPluginEnabled(pluginName));
     }
 
     /**
@@ -176,8 +180,8 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition serverPluginDisabled(String pluginName) {
         requireText(pluginName, "Plugin name");
-        return configured("server_plugin_disabled", Map.of("name", pluginName),
-                context -> !Bukkit.getPluginManager().isPluginEnabled(pluginName));
+        return configured("server_plugin_disabled", Map.of("name", pluginName), context -> !Bukkit.getPluginManager()
+                .isPluginEnabled(pluginName));
     }
 
     /**
@@ -188,8 +192,8 @@ public final class BuiltInEventCondition {
      */
     public static EventCondition serverVersionContains(String text) {
         requireText(text, "Server version text");
-        return configured("server_version_contains", Map.of("value", text),
-                context -> Bukkit.getVersion().contains(text));
+        return configured("server_version_contains", Map.of("value", text), context -> Bukkit.getVersion()
+                .contains(text));
     }
 
     /**
@@ -202,10 +206,11 @@ public final class BuiltInEventCondition {
         if (!Double.isFinite(minimum) || minimum < 0.0D) {
             throw new IllegalArgumentException("Minimum TPS must be finite and non-negative");
         }
-        return configured("server_tps", Map.of("min", minimum),
+        return configured(
+                "server_tps",
+                Map.of("min", minimum),
                 context -> Bukkit.getServer().getTPS()[0] >= minimum);
     }
-
 
     /**
      * Combines conditions using logical AND.
@@ -214,7 +219,9 @@ public final class BuiltInEventCondition {
      * @return the combined condition
      */
     public static EventCondition allOf(Collection<? extends EventCondition> conditions) {
-        return context -> conditions.stream().allMatch(condition -> condition.test(context));
+        java.util.List<EventCondition> copied = java.util.List.copyOf(conditions);
+        return configured("all_of", compositeParameters(copied), context -> copied.stream()
+                .allMatch(condition -> condition.test(context)));
     }
 
     /**
@@ -224,7 +231,9 @@ public final class BuiltInEventCondition {
      * @return the combined condition
      */
     public static EventCondition anyOf(Collection<? extends EventCondition> conditions) {
-        return context -> conditions.stream().anyMatch(condition -> condition.test(context));
+        java.util.List<EventCondition> copied = java.util.List.copyOf(conditions);
+        return configured("any_of", compositeParameters(copied), context -> copied.stream()
+                .anyMatch(condition -> condition.test(context)));
     }
 
     /**
@@ -234,7 +243,13 @@ public final class BuiltInEventCondition {
      * @return the negated condition
      */
     public static EventCondition not(EventCondition condition) {
-        return context -> !condition.test(context);
+        if (condition == null) {
+            throw new IllegalArgumentException("Condition must not be null");
+        }
+        Map<String, Object> parameters = new java.util.LinkedHashMap<>();
+        parameters.put("type", condition.type());
+        parameters.put("parameters", condition.parameters());
+        return configured("not", parameters, context -> !condition.test(context));
     }
 
     private static void requireText(String value, String name) {
@@ -245,8 +260,7 @@ public final class BuiltInEventCondition {
 
     private static void validateRange(int minimum, int maximum, String name) {
         if (minimum < 0 || maximum < 0 || minimum > maximum) {
-            throw new IllegalArgumentException(
-                    "Invalid " + name + " range: " + minimum + "-" + maximum);
+            throw new IllegalArgumentException("Invalid " + name + " range: " + minimum + "-" + maximum);
         }
     }
 
@@ -254,20 +268,38 @@ public final class BuiltInEventCondition {
         return value >= minimum && value <= maximum;
     }
 
-    private static EventCondition configured(
-            String type, Map<String, Object> parameters, EventCondition delegate) {
+    private static EventCondition configured(String type, Map<String, Object> parameters, EventCondition delegate) {
         return new EventCondition() {
-            @Override public boolean test(EventContext context) {
+            @Override
+            public boolean test(EventContext context) {
                 return delegate.test(context);
             }
 
-            @Override public String type() {
+            @Override
+            public String type() {
                 return type;
             }
 
-            @Override public Map<String, Object> parameters() {
+            @Override
+            public Map<String, Object> parameters() {
                 return parameters;
             }
         };
+    }
+
+    private static Map<String, Object> compositeParameters(Collection<? extends EventCondition> conditions) {
+        return Map.of(
+                "conditions",
+                conditions.stream()
+                        .map(condition -> {
+                            if (condition.type() == null || condition.type().isBlank()) {
+                                throw new IllegalArgumentException("Nested condition is not serializable");
+                            }
+                            Map<String, Object> values = new java.util.LinkedHashMap<>();
+                            values.put("type", condition.type());
+                            values.put("parameters", condition.parameters());
+                            return values;
+                        })
+                        .toList());
     }
 }

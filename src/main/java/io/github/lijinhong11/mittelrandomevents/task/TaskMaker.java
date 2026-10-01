@@ -1,14 +1,14 @@
 package io.github.lijinhong11.mittelrandomevents.task;
 
+import io.github.lijinhong11.mittellib.utils.task.CronTaskManager;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import org.bukkit.Bukkit;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import org.bukkit.Bukkit;
 
 /**
  * Owns all repeating {@code RandomEventLine} tasks.
@@ -18,6 +18,7 @@ import java.util.function.Supplier;
  * plugin shutdown.
  */
 public class TaskMaker {
+    private final CronTaskManager cronTaskManager = new CronTaskManager(MittelRandomEvents.getInstance());
     private final Map<String, LineTask> lineTasks = new ConcurrentHashMap<>();
     private volatile boolean closing;
 
@@ -34,8 +35,7 @@ public class TaskMaker {
      * @param lines lines to schedule
      * @param contextSupplier factory for one fresh context per execution
      */
-    public void startLines(Iterable<RandomEventLine> lines,
-            Supplier<? extends EventContext> contextSupplier) {
+    public void startLines(Iterable<RandomEventLine> lines, Supplier<? extends EventContext> contextSupplier) {
         for (RandomEventLine line : lines) {
             startLine(line, contextSupplier);
         }
@@ -50,20 +50,33 @@ public class TaskMaker {
      * @throws RuntimeException if Paper rejects task scheduling
      */
     public void startLine(RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
-        if (closing || line.intervalSeconds() == 0) {
+        if (closing) {
             return;
         }
         LineTask previous = lineTasks.remove(line.id());
         if (previous != null) {
             previous.cancel();
         }
+        cronTaskManager.cancel(line.id());
+        if (line.cron() == null && line.intervalSeconds() == 0) {
+            return;
+        }
 
         LineTask task = new LineTask(line, contextSupplier);
         lineTasks.put(line.id(), task);
-        long periodTicks = Math.max(1L, line.intervalSeconds() * 20L);
-        ScheduledTask handle = Bukkit.getGlobalRegionScheduler()
-                .runAtFixedRate(MittelRandomEvents.getInstance(), task, periodTicks, periodTicks);
-        task.bind(handle);
+        if (line.cron() != null) {
+            cronTaskManager.schedule(line.id(), line.cron(), () -> {
+                EventContext context = contextSupplier.get();
+                if (context != null) {
+                    line.execute(context);
+                }
+            });
+        } else {
+            long periodTicks = Math.max(1L, line.intervalSeconds() * 20L);
+            ScheduledTask handle = Bukkit.getGlobalRegionScheduler()
+                    .runAtFixedRate(MittelRandomEvents.getInstance(), task, periodTicks, periodTicks);
+            task.bind(handle);
+        }
     }
 
     /**
@@ -76,6 +89,7 @@ public class TaskMaker {
         if (task != null) {
             task.cancel();
         }
+        cronTaskManager.cancel(lineId);
     }
 
     /**
@@ -87,6 +101,19 @@ public class TaskMaker {
     public void restartLine(RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
         cancelLine(line.id());
         startLine(line, contextSupplier);
+    }
+
+    /** Executes a line once on Paper's global region scheduler. */
+    public void runOnce(RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
+        if (closing) {
+            return;
+        }
+        Bukkit.getGlobalRegionScheduler().run(MittelRandomEvents.getInstance(), task -> {
+            EventContext context = contextSupplier.get();
+            if (context != null) {
+                line.execute(context);
+            }
+        });
     }
 
     /**
@@ -105,6 +132,7 @@ public class TaskMaker {
      */
     public void close() {
         closing = true;
+        cronTaskManager.shutdown();
         lineTasks.values().forEach(LineTask::cancel);
         lineTasks.clear();
     }

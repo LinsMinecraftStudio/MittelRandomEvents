@@ -1,12 +1,11 @@
 package io.github.lijinhong11.mittelrandomevents.data;
 
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 /**
  * Common YAML file lifecycle used by event and event-line data managers.
@@ -28,9 +27,11 @@ public abstract class AbstractYamlDataManager<T> {
      *
      * @return the objects represented by the current YAML configuration
      */
-
     protected final List<T> loadAll() {
-        return configuration.getKeys(false).stream().map(this::load).filter(java.util.Objects::nonNull).toList();
+        return configuration.getKeys(false).stream()
+                .map(this::load)
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
     protected final T load(String id) {
@@ -53,6 +54,11 @@ public abstract class AbstractYamlDataManager<T> {
         } catch (IOException exception) {
             throw new IllegalStateException("Could not save " + file.getName(), exception);
         }
+    }
+
+    /** Clears the current document before writing an authoritative registry snapshot. */
+    protected final void clearConfiguration() {
+        configuration.getKeys(false).forEach(key -> configuration.set(key, null));
     }
 
     protected abstract T read(ConfigurationSection section);

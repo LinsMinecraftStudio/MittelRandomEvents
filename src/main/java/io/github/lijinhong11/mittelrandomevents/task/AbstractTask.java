@@ -1,7 +1,6 @@
 package io.github.lijinhong11.mittelrandomevents.task;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -36,7 +35,8 @@ public abstract class AbstractTask implements Consumer<ScheduledTask> {
      *
      * @param task the callback's scheduled task handle
      */
-    @Override public final void accept(ScheduledTask task) {
+    @Override
+    public final void accept(ScheduledTask task) {
         bind(task);
         if (!cancelled.get()) {
             run(task);

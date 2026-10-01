@@ -5,14 +5,15 @@ import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
-import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-
+import io.github.lijinhong11.mittelrandomevents.utils.RegistryUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.Material;
+import org.bukkit.Registry;
+import org.bukkit.configuration.ConfigurationSection;
 
 /**
  * Reads and saves {@link RandomEventLine} objects from {@code data/lines.yml}.
@@ -21,8 +22,7 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
     private final RandomEventManager eventManager;
     private final RandomEventLineManager lineManager;
 
-    public RandomEventLineDataManager(
-            RandomEventManager eventManager, RandomEventLineManager lineManager) {
+    public RandomEventLineDataManager(RandomEventManager eventManager, RandomEventLineManager lineManager) {
         super("data/lines.yml");
         this.eventManager = eventManager;
         this.lineManager = lineManager;
@@ -33,7 +33,8 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         for (RandomEventLine line : loadAll()) lineManager.register(line);
     }
 
-    @Override protected RandomEventLine read(ConfigurationSection section) {
+    @Override
+    protected RandomEventLine read(ConfigurationSection section) {
         List<RandomEvent> events = new ArrayList<>();
         Map<String, Double> configuredWeights = new LinkedHashMap<>();
         ConfigurationSection eventSection = section.getConfigurationSection("events");
@@ -42,11 +43,16 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
                 double weight = eventSection.getDouble(eventId, 1.0D);
                 if (eventSection.isConfigurationSection(eventId)) {
                     ConfigurationSection eventEntry = eventSection.getConfigurationSection(eventId);
-                    if (eventEntry != null && eventEntry.getBoolean("empty", false)) {
+                    if (eventEntry != null
+                            && (eventEntry.getBoolean("empty", false)
+                                    || "empty".equals(eventEntry.getString("kind")))) {
                         events.add(RandomEvent.empty(eventId));
                         weight = eventEntry.getDouble("weight", 1.0D);
                         configuredWeights.put(eventId, weight);
                         continue;
+                    }
+                    if (eventEntry != null) {
+                        weight = eventEntry.getDouble("weight", 1.0D);
                     }
                 }
                 double entryWeight = weight;
@@ -56,12 +62,15 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
                 });
             }
         }
-        RandomEventLine line = new RandomEventLine(
-                section.getName(), section.getInt("interval-seconds", 60), events);
+        RandomEventLine line = new RandomEventLine(section.getName(), section.getInt("interval-seconds", 60), events);
+        String cron = section.getString("cron");
+        if (cron != null && !cron.isBlank()) {
+            line.setCron(cron);
+        }
         String displayName = section.getString("display-name");
 
         if (displayName != null) {
-            line.setDisplayNameFunction(_ -> ComponentUtils.deserialize(displayName));
+            line.setDisplayNameFunction(sender -> ComponentUtils.deserialize(displayName));
         }
 
         line.setIcon(material(section.getString("icon"), line.getIcon()));
@@ -73,19 +82,23 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         return line;
     }
 
-    @Override protected void write(ConfigurationSection section, RandomEventLine line) {
+    @Override
+    protected void write(ConfigurationSection section, RandomEventLine line) {
         section.set("interval-seconds", line.intervalSeconds());
-        section.set("display-name", ComponentUtils.serialize(line.getDisplayNameFunction().apply(null)));
+        section.set("cron", line.cron());
+        section.set(
+                "display-name",
+                ComponentUtils.serialize(line.getDisplayNameFunction().apply(null)));
         section.set("icon", line.getIcon().name());
         ConfigurationSection events = section.createSection("events");
         for (RandomEvent event : line.events()) {
-            if (event.actions().isEmpty()) {
-                ConfigurationSection empty = events.createSection(event.id());
-                empty.set("empty", true);
-                empty.set("weight", line.weightOf(event));
-            } else {
-                events.set(event.id(), line.weightOf(event));
-            }
+            ConfigurationSection entry = events.createSection(event.id());
+            boolean reference = eventManager
+                    .get(event.id())
+                    .map(registered -> registered == event)
+                    .orElse(false);
+            entry.set("kind", reference ? "reference" : "empty");
+            entry.set("weight", line.weightOf(event));
         }
     }
 
@@ -97,13 +110,20 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
         return lineManager.get(id).orElse(null);
     }
 
-    @Override public void reloadData() {
+    @Override
+    public void reloadData() {
         lineManager.clear();
         reloadConfiguration();
         loadData();
     }
 
-    @Override public void saveAndClose() {
+    @Override
+    public void saveAndClose() {
+        saveData();
+    }
+
+    public void saveData() {
+        clearConfiguration();
         for (RandomEventLine line : lineManager.lines()) write(line.id(), line);
         saveConfiguration();
     }
@@ -113,7 +133,7 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
             return fallback;
         }
 
-        Material material = Material.matchMaterial(value);
+        Material material = RegistryUtils.get(Registry.MATERIAL, value);
         return material == null ? fallback : material;
     }
 }

@@ -13,11 +13,6 @@ import org.bukkit.Material;
 @FunctionalInterface
 public interface EventCondition {
     /**
-     * Uses the serialized condition type as the registry/localization identifier.
-     *
-     * @return the condition identifier
-     */
-    /**
      * Returns the serialized condition type.
      *
      * @return the type, or {@code null} for a runtime-only condition
@@ -29,17 +24,23 @@ public interface EventCondition {
     /**
      * @return the direct display name component
      */
-    default Component displayName() { return Component.text(type() == null ? "condition" : type()); }
+    default Component displayName() {
+        return Component.text(type() == null ? "condition" : type());
+    }
 
     /**
      * @return the direct description component
      */
-    default Component description() { return Component.empty(); }
+    default Component description() {
+        return Component.empty();
+    }
 
     /**
      * @return the material used as this condition's GUI icon
      */
-    default Material icon() { return Material.COMPARATOR; }
+    default Material icon() {
+        return Material.COMPARATOR;
+    }
 
     /**
      * Returns the parameter names supported by this condition.

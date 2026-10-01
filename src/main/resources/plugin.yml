@@ -1,10 +1,21 @@
 name: MittelRandomEvents
 version: '${version}'
 main: io.github.lijinhong11.mittelrandomevents.MittelRandomEvents
-api-version: '1.21'
+api-version: '26.1'
 author: lijinhong11
 description: Configurable and developer-friendly random events.
 folia-supported: true
+depend:
+  - MittelLib
 softdepend:
   - PlaceholderAPI
   - MiniPlaceholders
+permissions:
+  mittelrandomevents.gui:
+    default: op
+  mittelrandomevents.create_events:
+    default: op
+  mittelrandomevents.create_lines:
+    default: op
+  mittelrandomevents.reload:
+    default: op

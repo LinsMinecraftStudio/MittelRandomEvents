@@ -19,10 +19,10 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
-    compileOnly("io.github.lijinhong11:MittelLib:1.3.3")
+    compileOnly("io.github.lijinhong11:MittelLib:1.4.6")
     compileOnly("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("me.clip:placeholderapi:2.12.2")
-    compileOnly("io.github.miniplaceholders:miniplaceholders-api:2.3.0")
+    compileOnly("io.github.miniplaceholders:miniplaceholders-api:3.2.0")
 }
 
 java {
