@@ -11,6 +11,12 @@ softdepend:
   - PlaceholderAPI
   - MiniPlaceholders
 permissions:
+  mittelrandomevents.about:
+    default: op
+  mittelrandomevents.view_events:
+    default: op
+  mittelrandomevents.view_lines:
+    default: op
   mittelrandomevents.gui:
     default: op
   mittelrandomevents.create_events:

@@ -4,6 +4,8 @@ import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 
+import java.util.Locale;
+
 /** Helpers for resolving Bukkit registry-backed values from configuration strings. */
 public final class RegistryUtils {
     private RegistryUtils() {}
@@ -12,7 +14,7 @@ public final class RegistryUtils {
         if (value == null || value.isBlank()) {
             return null;
         }
-        String normalized = value.contains(":") ? value : "minecraft:" + value.toLowerCase(java.util.Locale.ROOT);
+        String normalized = value.contains(":") ? value : "minecraft:" + value.toLowerCase(Locale.ROOT);
         NamespacedKey key = NamespacedKey.fromString(normalized);
         return key == null ? null : registry.get(key);
     }

@@ -33,6 +33,7 @@ public final class MRECommands {
     public static LiteralCommandNode<CommandSourceStack> get() {
         return Commands.literal("mittelrandomevents")
                 .then(Commands.literal("about")
+                        .requires(c -> c.getSender().hasPermission(Constants.PERM_ABOUT))
                         .executes(c -> about(c.getSource().getSender())))
                 .then(Commands.literal("gui")
                         .requires(
@@ -58,6 +59,7 @@ public final class MRECommands {
 
     private static LiteralCommandNode<CommandSourceStack> events() {
         return Commands.literal("events")
+                .requires(c -> c.getSender().hasPermission(Constants.PERM_VIEW_EVENTS))
                 .then(Commands.literal("list").executes(c -> {
                     RandomEventManager manager = plugin().getEventManager();
                     send(
@@ -139,6 +141,7 @@ public final class MRECommands {
 
     private static LiteralCommandNode<CommandSourceStack> lines() {
         return Commands.literal("lines")
+                .requires(c -> c.getSender().hasPermission(Constants.PERM_VIEW_LINES))
                 .then(Commands.literal("list").executes(c -> {
                     RandomEventLineManager manager = plugin().getLineManager();
                     send(
@@ -263,11 +266,7 @@ public final class MRECommands {
     }
 
     private static int about(CommandSender sender) {
-        send(
-                sender,
-                "command.about.name",
-                replacement("%version%", plugin().getDescription().getVersion()));
-        send(sender, "command.about.description");
+        plugin().getLanguageManager().sendMessages(sender, "command.about");
         return Command.SINGLE_SUCCESS;
     }
 

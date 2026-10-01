@@ -1,7 +1,10 @@
 command:
   about:
-    name: "MittelRandomEvents %version%"
-    description: "随机事件与事件线管理插件。"
+    - "<#D7B769>MittelRandomEvents"
+    - "<#E5C779>作者: lijinhong11"
+    - "<#A7BC9C>GitHub: <click:open_url:https://github.com/LinsMinecraftStudio/MittelRandomEvents>https://github.com/LinsMinecraftStudio/MittelRandomEvents</click>"
+    - "<aqua>QQ群: <click:open_url:https://qm.qq.com/q/qJEqZZxVNm>1107921027</click>"
+    - "<dark_purple>Discord: <click:open_url:https://discord.gg/9YP2UaPZhE>https://discord.gg/9YP2UaPZhE</click>"
   reload:
     success: "随机事件和事件线已重新加载。"
   error:

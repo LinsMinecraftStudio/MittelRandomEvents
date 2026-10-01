@@ -19,6 +19,7 @@ import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.builtin.BuiltInEventCondition;
 import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
 import io.github.lijinhong11.mittelrandomevents.data.EventConditionCodec;
+import io.github.lijinhong11.mittelrandomevents.utils.Constants;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,27 +33,34 @@ public final class MREGuiManager {
     private MREGuiManager() {}
 
     public static void openMain(Player player) {
-        ChestGUI gui = MittelGUI.chestBuilder()
+        var guiBuilder = MittelGUI.chestBuilder()
                 .title(msg(player, "gui.home.title"))
                 .size(27)
                 .structure("XXXXXXXXC", "XXXPXMXXX", "XXXXXXXXX")
                 .bind('X', ButtonItem.BACKGROUND)
-                .bind('P', sectionButton(Material.NETHER_STAR, player, "gui.home.events", () -> openEventList(player)))
-                .bind('M', sectionButton(Material.CLOCK, player, "gui.home.lines", () -> openLineList(player)))
                 .bind('C', ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.close"), (g, e) -> {
                     player.closeInventory();
                     return false;
-                }))
-                .build();
+                }));
+        if (player.hasPermission(Constants.PERM_VIEW_EVENTS)) {
+            guiBuilder.bind(
+                    'P', sectionButton(Material.NETHER_STAR, player, "gui.home.events", () -> openEventList(player)));
+        }
+        if (player.hasPermission(Constants.PERM_VIEW_LINES)) {
+            guiBuilder.bind('M', sectionButton(Material.CLOCK, player, "gui.home.lines", () -> openLineList(player)));
+        }
+        ChestGUI gui = guiBuilder.build();
         gui.open(player);
     }
 
     public static void openEventList(Player player) {
         PaginatedChestGUI gui = paged(player, "gui.events.title", () -> openMain(player));
-        gui.addPageItem(ButtonItem.clickable(messagedItem(Material.EMERALD, player, "gui.items.create"), (g, e) -> {
-            createEvent(player);
-            return false;
-        }));
+        if (player.hasPermission(Constants.PERM_CREATE_EVENTS)) {
+            gui.addPageItem(ButtonItem.clickable(messagedItem(Material.EMERALD, player, "gui.items.create"), (g, e) -> {
+                createEvent(player);
+                return false;
+            }));
+        }
 
         for (RandomEvent event : plugin().getEventManager().events()) {
             gui.addPageItem(ButtonItem.clickable(objectItem(player, event), (g, e) -> {
@@ -65,10 +73,12 @@ public final class MREGuiManager {
 
     public static void openLineList(Player player) {
         PaginatedChestGUI gui = paged(player, "gui.lines.title", () -> openMain(player));
-        gui.addPageItem(ButtonItem.clickable(messagedItem(Material.EMERALD, player, "gui.items.create"), (g, e) -> {
-            createLine(player);
-            return false;
-        }));
+        if (player.hasPermission(Constants.PERM_CREATE_LINES)) {
+            gui.addPageItem(ButtonItem.clickable(messagedItem(Material.EMERALD, player, "gui.items.create"), (g, e) -> {
+                createLine(player);
+                return false;
+            }));
+        }
 
         for (RandomEventLine line : plugin().getLineManager().lines()) {
             gui.addPageItem(ButtonItem.clickable(objectItem(player, line), (g, e) -> {
@@ -83,6 +93,11 @@ public final class MREGuiManager {
         ChestGUI gui =
                 management(player, "gui.events.management.title", MessageReplacement.replace("%id%", event.id()));
         gui.putItem(slot(2, 5), ButtonItem.unclickable(objectItem(player, event)));
+        if (!player.hasPermission(Constants.PERM_CREATE_EVENTS)) {
+            putBack(gui, player, MREGuiManager::openEventList);
+            gui.open(player);
+            return;
+        }
         gui.putItem(
                 slot(3, 3),
                 ButtonItem.clickable(
@@ -176,6 +191,11 @@ public final class MREGuiManager {
     private static void openLineManagement(Player player, RandomEventLine line) {
         ChestGUI gui = management(player, "gui.lines.management.title", MessageReplacement.replace("%id%", line.id()));
         gui.putItem(slot(2, 5), ButtonItem.unclickable(objectItem(player, line)));
+        if (!player.hasPermission(Constants.PERM_CREATE_LINES)) {
+            putBack(gui, player, MREGuiManager::openLineList);
+            gui.open(player);
+            return;
+        }
         gui.putItem(
                 slot(3, 3),
                 ButtonItem.clickable(
