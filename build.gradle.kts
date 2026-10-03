@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "io.github.lijinhong11"
-version = "1.0-SNAPSHOT"
+version = findProperty("version")!! as String
 
 repositories {
     mavenCentral()
