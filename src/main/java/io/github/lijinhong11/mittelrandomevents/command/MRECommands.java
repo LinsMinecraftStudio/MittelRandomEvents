@@ -32,9 +32,16 @@ public final class MRECommands {
 
     public static LiteralCommandNode<CommandSourceStack> get() {
         return Commands.literal("mittelrandomevents")
+                .executes(c -> {
+                    if (c.getSource().getSender().hasPermission(Constants.PERM_ABOUT)) {
+                        help(c.getSource().getSender(), "command.help.general");
+                    }
+                    return Command.SINGLE_SUCCESS;
+                })
                 .then(Commands.literal("about")
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_ABOUT))
                         .executes(c -> about(c.getSource().getSender())))
+                .then(help())
                 .then(Commands.literal("gui")
                         .requires(
                                 c -> c.getSender().hasPermission(Constants.PERM_GUI) && c.getSender() instanceof Player)
@@ -267,6 +274,21 @@ public final class MRECommands {
 
     private static int about(CommandSender sender) {
         plugin().getLanguageManager().sendMessages(sender, "command.about");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static LiteralCommandNode<CommandSourceStack> help() {
+        return Commands.literal("help")
+                .requires(c -> c.getSender().hasPermission(Constants.PERM_ABOUT))
+                .executes(c -> help(c.getSource().getSender(), "command.help.general"))
+                .then(Commands.literal("events")
+                        .executes(c -> help(c.getSource().getSender(), "command.help.events")))
+                .then(Commands.literal("lines").executes(c -> help(c.getSource().getSender(), "command.help.lines")))
+                .build();
+    }
+
+    private static int help(CommandSender sender, String key) {
+        plugin().getLanguageManager().sendMessages(sender, key);
         return Command.SINGLE_SUCCESS;
     }
 

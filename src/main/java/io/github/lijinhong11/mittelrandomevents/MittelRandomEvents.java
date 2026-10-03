@@ -81,8 +81,8 @@ public class MittelRandomEvents extends JavaPlugin {
 
         getLogger().info("MittelRandomEvents is enabled!");
 
-        new Metrics(this, 34430);
         fastStats.ready();
+        new Metrics(this, 34430);
 
         // an updater here
     }

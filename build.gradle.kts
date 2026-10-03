@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
-    compileOnly("io.github.lijinhong11:MittelLib:1.4.6")
+    compileOnly("io.github.lijinhong11:MittelLib:1.4.8")
 
     compileOnly("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("dev.faststats.metrics:bukkit:0.30.2")

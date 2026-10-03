@@ -1,6 +1,7 @@
 package io.github.lijinhong11.mittelrandomevents.hook;
 
 import io.github.lijinhong11.mittellib.hook.placeholder.UniversalPlaceholderExpansion;
+import io.github.lijinhong11.mittellib.utils.StringUtils;
 import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
@@ -38,6 +39,10 @@ public final class MittelRandomEventsExpansion extends UniversalPlaceholderExpan
         registerPlaceholder("next_event_remaining", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);
             return line == null ? "0" : String.valueOf(line.remainingNextEventSeconds());
+        });
+        registerPlaceholder("next_event_remaining_formatted", PlaceholderType.GLOBAL, (viewer, target, args) -> {
+            RandomEventLine line = line(args);
+            return line == null ? "0" : StringUtils.formatCountdown(line.remainingNextEventSeconds());
         });
         registerPlaceholder("current_event", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);
