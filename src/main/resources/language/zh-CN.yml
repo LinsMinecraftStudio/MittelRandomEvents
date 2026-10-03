@@ -29,12 +29,10 @@ command:
       - "<#D7B769>MittelRandomEvents 事件线帮助"
       - "<#E5C779>/mre lines list <#8EA08C>- <#A7BC9C>列出所有事件线"
       - "<#E5C779>/mre lines info <id> <#8EA08C>- <#A7BC9C>查看事件线信息"
-      - "<#E5C779>/mre lines create <id> <间隔秒数> <#8EA08C>- <#A7BC9C>创建事件线"
+      - "<#E5C779>/mre lines create <id> [Cron表达式] <#8EA08C>- <#A7BC9C>创建事件线"
       - "<#E5C779>/mre lines delete <id> <#8EA08C>- <#A7BC9C>删除事件线"
-      - "<#E5C779>/mre lines add-event <事件线> <事件> <秒数> <权重> <#8EA08C>- <#A7BC9C>向事件线添加事件"
-      - "<#E5C779>/mre lines set <id> interval <秒数> <#8EA08C>- <#A7BC9C>设置事件线间隔"
+      - "<#E5C779>/mre lines add-event <事件线> <事件> <权重> <#8EA08C>- <#A7BC9C>向事件线添加事件"
       - "<#E5C779>/mre lines set <id> cron <表达式> <#8EA08C>- <#A7BC9C>设置事件线Cron调度"
-      - "<#E5C779>/mre lines set <id> display-name <显示名> <#8EA08C>- <#A7BC9C>设置事件线显示名"
       - "<#E5C779>/mre lines set <id> icon <材质> <#8EA08C>- <#A7BC9C>设置事件线图标"
       - "<#E5C779>/mre lines start <id> <#8EA08C>- <#A7BC9C>启动事件线"
       - "<#E5C779>/mre lines stop <id> <#8EA08C>- <#A7BC9C>停止事件线"
@@ -56,17 +54,16 @@ command:
       icon: "已更新事件图标。"
   lines:
     list: "事件线（%count%）：%lines%"
-    info: "事件线 %id% 间隔=%interval% Cron=%cron% 事件数=%events% 运行中=%running%"
+    info: "事件线 %id% Cron=%cron% 事件数=%events% 运行中=%running%"
     exists: "事件线已存在。"
+    no-cron: "请先为事件线设置 Cron 表达式。"
     create: "已创建事件线 %id%。"
     delete: "已删除事件线 %id%。"
     add-event:
       exists: "该事件已经添加到事件线。"
       success: "已将事件 %event% 添加到事件线 %line%。"
     set:
-      interval: "已更新事件线间隔。"
       cron: "已更新事件线 Cron 表达式。"
-      display-name: "已更新事件线显示名称。"
       icon: "已更新事件线图标。"
     start: "已启动事件线 %id%。"
     stop: "已停止事件线 %id%。"
@@ -97,6 +94,7 @@ gui:
     parameters: "<gray>参数：<white>%value%"
     parameter: "<yellow>%value%"
     value: "<gray>值：<white>%value%"
+    invalid-integer: "<red>请输入 %min% 到 %max% 之间的整数。"
     id: "<gray>ID：<white>%value%"
     weight: "<gray>权重：<white>%value%"
     enabled: "<gray>已启用：<white>%value%"
@@ -159,9 +157,6 @@ gui:
     events:
       name: "<yellow>事件与权重"
       lore: []
-    interval:
-      name: "<yellow>运行间隔"
-      lore: []
     cron:
       name: "<yellow>Cron 调度"
       lore: []
@@ -172,11 +167,14 @@ gui:
     event:
       name: "%name%"
       lore:
+        - "<gray>ID：<white>%id%"
         - "<gray>已启用：<white>%enabled%"
         - "<gray>动作数：<white>%actions%"
     line:
-      name: "%name%"
+      name: "%id%"
       lore:
+        - "<gray>ID：<white>%id%"
+        - "<gray>Cron：<white>%cron%"
         - "<gray>事件数：<white>%events%"
         - "<gray>运行中：<white>%running%"
     action:
@@ -236,15 +234,12 @@ gui:
       stop: "<red>停止"
       run: "<yellow>运行一次"
       events: "<yellow>事件与权重"
-      interval: "<yellow>运行间隔"
       cron: "<yellow>Cron 调度"
     create:
       title: "创建事件线"
       label: "请输入事件线 ID。"
-    interval-title: "设置运行间隔"
-    interval-label: "运行间隔秒数，0 表示禁用"
     cron-title: "设置 Cron 调度"
-    cron-label: "Unix 五字段表达式，留空表示禁用"
+    cron-label: "Unix 五字段表达式（如 */5 * * * *），留空表示禁用自动运行"
   actions:
     start-title: "<gold>执行时动作"
     end-title: "<gold>结束时动作"

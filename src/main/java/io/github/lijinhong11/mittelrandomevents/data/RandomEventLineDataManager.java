@@ -1,6 +1,5 @@
 package io.github.lijinhong11.mittelrandomevents.data;
 
-import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
@@ -35,6 +34,9 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
 
     @Override
     protected RandomEventLine read(ConfigurationSection section) {
+        if (section.contains("interval-seconds")) {
+            section.set("interval-seconds", null);
+        }
         List<RandomEvent> events = new ArrayList<>();
         Map<String, Double> configuredWeights = new LinkedHashMap<>();
         ConfigurationSection eventSection = section.getConfigurationSection("events");
@@ -62,17 +64,11 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
                 });
             }
         }
-        RandomEventLine line = new RandomEventLine(section.getName(), section.getInt("interval-seconds", 60), events);
+        RandomEventLine line = new RandomEventLine(section.getName(), events);
         String cron = section.getString("cron");
         if (cron != null && !cron.isBlank()) {
             line.setCron(cron);
         }
-        String displayName = section.getString("display-name");
-
-        if (displayName != null) {
-            line.setDisplayNameFunction(sender -> ComponentUtils.deserialize(displayName));
-        }
-
         line.setIcon(material(section.getString("icon"), line.getIcon()));
         if (eventSection != null) {
             for (RandomEvent event : events) {
@@ -84,11 +80,7 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
 
     @Override
     protected void write(ConfigurationSection section, RandomEventLine line) {
-        section.set("interval-seconds", line.intervalSeconds());
         section.set("cron", line.cron());
-        section.set(
-                "display-name",
-                ComponentUtils.serialize(line.getDisplayNameFunction().apply(null)));
         section.set("icon", line.getIcon().name());
         ConfigurationSection events = section.createSection("events");
         for (RandomEvent event : line.events()) {
@@ -133,7 +125,6 @@ public final class RandomEventLineDataManager extends AbstractYamlDataManager<Ra
             return fallback;
         }
 
-        Material material = RegistryUtils.get(Registry.MATERIAL, value);
-        return material == null ? fallback : material;
+        return RegistryUtils.get(Registry.MATERIAL, value);
     }
 }

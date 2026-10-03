@@ -3,7 +3,6 @@ package io.github.lijinhong11.mittelrandomevents.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -170,11 +169,12 @@ public final class MRECommands {
                 .then(Commands.literal("create")
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_CREATE_LINES))
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .then(Commands.argument("intervalSeconds", IntegerArgumentType.integer(0))
+                                .executes(c -> createLine(c, c.getArgument("id", String.class), null))
+                                .then(Commands.argument("cron", StringArgumentType.greedyString())
                                         .executes(c -> createLine(
                                                 c,
                                                 c.getArgument("id", String.class),
-                                                IntegerArgumentType.getInteger(c, "intervalSeconds"))))))
+                                                c.getArgument("cron", String.class))))))
                 .then(Commands.literal("delete")
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_CREATE_LINES))
                         .then(Commands.argument("id", StringArgumentType.word())
@@ -183,22 +183,17 @@ public final class MRECommands {
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_CREATE_LINES))
                         .then(Commands.argument("line", StringArgumentType.word())
                                 .then(Commands.argument("event", StringArgumentType.word())
-                                        .then(Commands.argument("seconds", IntegerArgumentType.integer(0))
-                                                .then(Commands.argument(
-                                                                "weight",
-                                                                DoubleArgumentType.doubleArg(0, Double.MAX_VALUE))
-                                                        .executes(c -> addEvent(
-                                                                c,
-                                                                c.getArgument("line", String.class),
-                                                                c.getArgument("event", String.class),
-                                                                IntegerArgumentType.getInteger(c, "seconds"),
-                                                                DoubleArgumentType.getDouble(c, "weight"))))))))
+                                        .then(Commands.argument(
+                                                        "weight", DoubleArgumentType.doubleArg(0, Double.MAX_VALUE))
+                                                .executes(c -> addEvent(
+                                                        c,
+                                                        c.getArgument("line", String.class),
+                                                        c.getArgument("event", String.class),
+                                                        DoubleArgumentType.getDouble(c, "weight")))))))
                 .then(Commands.literal("set")
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_CREATE_LINES))
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .then(lineInterval())
                                 .then(lineCron())
-                                .then(lineDisplayName())
                                 .then(lineIcon())))
                 .then(Commands.literal("start")
                         .requires(c -> c.getSender().hasPermission(Constants.PERM_CREATE_LINES))
@@ -215,21 +210,6 @@ public final class MRECommands {
                 .build();
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> lineInterval() {
-        return Commands.literal("interval")
-                .then(Commands.argument("seconds", IntegerArgumentType.integer(0))
-                        .executes(c -> {
-                            RandomEventLine line = line(c.getArgument("id", String.class));
-                            if (line == null) return missing(c.getSource().getSender(), "line");
-                            line.setIntervalSeconds(IntegerArgumentType.getInteger(c, "seconds"));
-                            line.setCron(null);
-                            restartLine(line);
-                            plugin().saveData();
-                            send(c.getSource().getSender(), "command.lines.set.interval");
-                            return Command.SINGLE_SUCCESS;
-                        }));
-    }
-
     private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> lineCron() {
         return Commands.literal("cron")
                 .then(Commands.argument("expression", StringArgumentType.greedyString())
@@ -240,20 +220,6 @@ public final class MRECommands {
                             restartLine(line);
                             plugin().saveData();
                             send(c.getSource().getSender(), "command.lines.set.cron");
-                            return Command.SINGLE_SUCCESS;
-                        }));
-    }
-
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> lineDisplayName() {
-        return Commands.literal("display-name")
-                .then(Commands.argument("value", StringArgumentType.greedyString())
-                        .executes(c -> {
-                            RandomEventLine line = line(c.getArgument("id", String.class));
-                            if (line == null) return missing(c.getSource().getSender(), "line");
-                            line.setDisplayNameFunction(
-                                    sender -> ComponentUtils.deserialize(c.getArgument("value", String.class)));
-                            plugin().saveData();
-                            send(c.getSource().getSender(), "command.lines.set.display-name");
                             return Command.SINGLE_SUCCESS;
                         }));
     }
@@ -331,9 +297,9 @@ public final class MRECommands {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int createLine(CommandContext<CommandSourceStack> c, String id, int seconds) {
+    private static int createLine(CommandContext<CommandSourceStack> c, String id, String cron) {
         if (line(id) != null) return fail(c.getSource().getSender(), "command.lines.exists");
-        plugin().getLineManager().register(new RandomEventLine(id, seconds, new ArrayList<>()));
+        plugin().getLineManager().register(new RandomEventLine(id, cron, new ArrayList<>()));
         plugin().saveData();
         send(c.getSource().getSender(), "command.lines.create", replacement("%id%", id));
         return Command.SINGLE_SUCCESS;
@@ -348,18 +314,14 @@ public final class MRECommands {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int addEvent(
-            CommandContext<CommandSourceStack> c, String lineId, String eventId, int seconds, double weight) {
+    private static int addEvent(CommandContext<CommandSourceStack> c, String lineId, String eventId, double weight) {
         RandomEventLine line = line(lineId);
         RandomEvent event = event(eventId);
         if (line == null) return missing(c.getSource().getSender(), "line");
         if (event == null) return missing(c.getSource().getSender(), "event");
         if (line.events().contains(event)) return fail(c.getSource().getSender(), "command.lines.add-event.exists");
-        line.setIntervalSeconds(seconds);
-        line.setCron(null);
         line.addEvent(event);
         line.setWeight(event, weight);
-        restartLine(line);
         plugin().saveData();
         send(
                 c.getSource().getSender(),
@@ -376,7 +338,6 @@ public final class MRECommands {
                 c.getSource().getSender(),
                 "command.lines.info",
                 replacement("%id%", line.id()),
-                replacement("%interval%", String.valueOf(line.intervalSeconds())),
                 replacement("%cron%", String.valueOf(line.cron())),
                 replacement("%events%", String.valueOf(line.events().size())),
                 replacement("%running%", String.valueOf(plugin().getTaskMaker().isRunning(id))));
@@ -386,6 +347,7 @@ public final class MRECommands {
     private static int startLine(CommandContext<CommandSourceStack> c, String id) {
         RandomEventLine line = line(id);
         if (line == null) return missing(c.getSource().getSender(), "line");
+        if (line.cron() == null) return fail(c.getSource().getSender(), "command.lines.no-cron");
         plugin().getTaskMaker().startLine(line, () -> new DefaultEventContext(plugin().getEventManager()));
         send(c.getSource().getSender(), "command.lines.start", replacement("%id%", id));
         return Command.SINGLE_SUCCESS;

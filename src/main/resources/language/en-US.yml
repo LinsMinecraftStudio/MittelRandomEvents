@@ -92,10 +92,6 @@ mre:
     any_of:
       name: "Any Condition"
       description: "Passes when at least one nested condition passes"
-  line:
-    example:
-      name: "Example Line"
-      description: "Runs configured random events on a schedule"
 command:
   about:
     - "<#D7B769>MittelRandomEvents"
@@ -127,12 +123,10 @@ command:
       - "<#D7B769>MittelRandomEvents Line Help"
       - "<#E5C779>/mre lines list <#8EA08C>- <#A7BC9C>List all lines"
       - "<#E5C779>/mre lines info <id> <#8EA08C>- <#A7BC9C>Show line info"
-      - "<#E5C779>/mre lines create <id> <intervalSeconds> <#8EA08C>- <#A7BC9C>Create a line"
+      - "<#E5C779>/mre lines create <id> [cron] <#8EA08C>- <#A7BC9C>Create a line"
       - "<#E5C779>/mre lines delete <id> <#8EA08C>- <#A7BC9C>Delete a line"
-      - "<#E5C779>/mre lines add-event <line> <event> <seconds> <weight> <#8EA08C>- <#A7BC9C>Add an event to a line"
-      - "<#E5C779>/mre lines set <id> interval <seconds> <#8EA08C>- <#A7BC9C>Set line interval"
+      - "<#E5C779>/mre lines add-event <line> <event> <weight> <#8EA08C>- <#A7BC9C>Add an event to a line"
       - "<#E5C779>/mre lines set <id> cron <expression> <#8EA08C>- <#A7BC9C>Set line Cron schedule"
-      - "<#E5C779>/mre lines set <id> display-name <displayName> <#8EA08C>- <#A7BC9C>Set line display name"
       - "<#E5C779>/mre lines set <id> icon <material> <#8EA08C>- <#A7BC9C>Set line icon"
       - "<#E5C779>/mre lines start <id> <#8EA08C>- <#A7BC9C>Start a line"
       - "<#E5C779>/mre lines stop <id> <#8EA08C>- <#A7BC9C>Stop a line"
@@ -154,17 +148,16 @@ command:
       icon: "Updated event icon."
   lines:
     list: "Lines (%count%): %lines%"
-    info: "Line %id% interval=%interval% cron=%cron% events=%events% running=%running%"
+    info: "Line %id% cron=%cron% events=%events% running=%running%"
     exists: "Line already exists."
+    no-cron: "Set a Cron expression for this line first."
     create: "Created line %id%."
     delete: "Deleted line %id%."
     add-event:
       exists: "Event is already attached to the line."
       success: "Added event %event% to line %line%."
     set:
-      interval: "Updated line interval."
       cron: "Updated line Cron expression."
-      display-name: "Updated line display name."
       icon: "Updated line icon."
     start: "Started line %id%."
     stop: "Stopped line %id%."
@@ -195,6 +188,7 @@ gui:
     parameters: "<gray>Parameters: <white>%value%"
     parameter: "<yellow>%value%"
     value: "<gray>Value: <white>%value%"
+    invalid-integer: "<red>Enter an integer between %min% and %max%."
     id: "<gray>ID: <white>%value%"
     weight: "<gray>Weight: <white>%value%"
     enabled: "<gray>Enabled: <white>%value%"
@@ -257,9 +251,6 @@ gui:
     events:
       name: "<yellow>Events and Weights"
       lore: []
-    interval:
-      name: "<yellow>Interval"
-      lore: []
     cron:
       name: "<yellow>Cron Schedule"
       lore: []
@@ -270,11 +261,14 @@ gui:
     event:
       name: "%name%"
       lore:
+        - "<gray>ID: <white>%id%"
         - "<gray>Enabled: <white>%enabled%"
         - "<gray>Actions: <white>%actions%"
     line:
-      name: "%name%"
+      name: "%id%"
       lore:
+        - "<gray>ID: <white>%id%"
+        - "<gray>Cron: <white>%cron%"
         - "<gray>Events: <white>%events%"
         - "<gray>Running: <white>%running%"
     action:
@@ -334,15 +328,12 @@ gui:
       stop: "<red>Stop"
       run: "<yellow>Run Once"
       events: "<yellow>Events and Weights"
-      interval: "<yellow>Interval"
       cron: "<yellow>Cron Schedule"
     create:
       title: "Create Event Line"
       label: "Enter a line ID."
-    interval-title: "Set Interval"
-    interval-label: "Interval in seconds; zero disables it"
     cron-title: "Set Cron Schedule"
-    cron-label: "Unix five-field expression; blank disables it"
+    cron-label: "Unix five-field expression (e.g. */5 * * * *); blank disables automatic execution"
   actions:
     start-title: "<gold>Start Actions"
     end-title: "<gold>End Actions"

@@ -4,22 +4,17 @@ import io.github.lijinhong11.mittellib.utils.task.CronTaskManager;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import org.bukkit.Bukkit;
 
 /**
- * Owns all repeating {@code RandomEventLine} tasks.
+ * Owns all Cron-scheduled {@code RandomEventLine} tasks.
  *
- * <p>This class follows the lifecycle pattern used by SuperMines: it creates Paper scheduled
- * tasks, keeps their handles, replaces tasks when a line is restarted and cancels every task on
- * plugin shutdown.
+ * <p>Delegates scheduling and task handles to MittelLib, replaces tasks when a line is restarted
+ * and cancels every task on plugin shutdown.
  */
 public class TaskMaker {
     private final CronTaskManager cronTaskManager = new CronTaskManager(MittelRandomEvents.getInstance());
-    private final Map<String, LineTask> lineTasks = new ConcurrentHashMap<>();
     private volatile boolean closing;
 
     /**
@@ -42,41 +37,28 @@ public class TaskMaker {
     }
 
     /**
-     * Starts a repeating task for a line.
+     * Starts a Cron task for a line. Lines without a Cron expression are not scheduled.
      *
      * @param line the line to execute
      * @param contextSupplier supplier used to create a fresh runtime context for each execution
-     * @throws IllegalArgumentException if the line interval is invalid
+     * @throws IllegalArgumentException if the Cron expression is invalid
      * @throws RuntimeException if Paper rejects task scheduling
      */
     public void startLine(RandomEventLine line, Supplier<? extends EventContext> contextSupplier) {
         if (closing) {
             return;
         }
-        LineTask previous = lineTasks.remove(line.id());
-        if (previous != null) {
-            previous.cancel();
-        }
         cronTaskManager.cancel(line.id());
-        if (line.cron() == null && line.intervalSeconds() == 0) {
+        if (line.cron() == null) {
             return;
         }
 
-        LineTask task = new LineTask(line, contextSupplier);
-        lineTasks.put(line.id(), task);
-        if (line.cron() != null) {
-            cronTaskManager.schedule(line.id(), line.cron(), () -> {
-                EventContext context = contextSupplier.get();
-                if (context != null) {
-                    line.execute(context);
-                }
-            });
-        } else {
-            long periodTicks = Math.max(1L, line.intervalSeconds() * 20L);
-            ScheduledTask handle = Bukkit.getGlobalRegionScheduler()
-                    .runAtFixedRate(MittelRandomEvents.getInstance(), task, periodTicks, periodTicks);
-            task.bind(handle);
-        }
+        cronTaskManager.schedule(line.id(), line.cron(), () -> {
+            EventContext context = contextSupplier.get();
+            if (context != null) {
+                line.execute(context);
+            }
+        });
     }
 
     /**
@@ -85,10 +67,6 @@ public class TaskMaker {
      * @param lineId the ID of the line task to cancel
      */
     public void cancelLine(String lineId) {
-        LineTask task = lineTasks.remove(lineId);
-        if (task != null) {
-            task.cancel();
-        }
         cronTaskManager.cancel(lineId);
     }
 
@@ -123,8 +101,15 @@ public class TaskMaker {
      * @return {@code true} when the line task exists and has not been cancelled
      */
     public boolean isRunning(String lineId) {
-        LineTask task = lineTasks.get(lineId);
+        CronTaskManager.CronTask task = cronTaskManager.get(lineId);
         return task != null && !task.isCancelled();
+    }
+
+    /** Returns the seconds until the next Cron execution, or zero when the line is not scheduled. */
+    public long remainingNextEventSeconds(String lineId) {
+        CronTaskManager.CronTask task = cronTaskManager.get(lineId);
+        if (task == null || task.isCancelled()) return 0L;
+        return (Math.max(0L, task.getRemainingMillis()) + 999L) / 1000L;
     }
 
     /**
@@ -133,8 +118,6 @@ public class TaskMaker {
     public void close() {
         closing = true;
         cronTaskManager.shutdown();
-        lineTasks.values().forEach(LineTask::cancel);
-        lineTasks.clear();
     }
 
     /**

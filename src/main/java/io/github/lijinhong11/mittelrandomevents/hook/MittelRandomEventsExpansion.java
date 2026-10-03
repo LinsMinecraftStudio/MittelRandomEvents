@@ -38,11 +38,13 @@ public final class MittelRandomEventsExpansion extends UniversalPlaceholderExpan
         });
         registerPlaceholder("next_event_remaining", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);
-            return line == null ? "0" : String.valueOf(line.remainingNextEventSeconds());
+            return line == null ? "0" : String.valueOf(plugin.getTaskMaker().remainingNextEventSeconds(line.id()));
         });
         registerPlaceholder("next_event_remaining_formatted", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);
-            return line == null ? "0" : StringUtils.formatCountdown(line.remainingNextEventSeconds());
+            return line == null
+                    ? "0"
+                    : StringUtils.formatCountdown(plugin.getTaskMaker().remainingNextEventSeconds(line.id()));
         });
         registerPlaceholder("current_event", PlaceholderType.GLOBAL, (viewer, target, args) -> {
             RandomEventLine line = line(args);

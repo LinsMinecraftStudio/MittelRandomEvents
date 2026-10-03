@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * <p>All methods must be called after MittelRandomEvents has enabled. The registered line is
- * immediately scheduled unless its interval is zero.
+ * immediately scheduled when it has a Cron expression.
  */
 public final class MittelRandomEventsAPI {
     private MittelRandomEventsAPI() {}

@@ -1,7 +1,6 @@
 package io.github.lijinhong11.mittelrandomevents.gui;
 
 import io.github.lijinhong11.mittellib.gui.dialog.impl.input.FloatInputDialog;
-import io.github.lijinhong11.mittellib.gui.dialog.impl.input.IntegerInputDialog;
 import io.github.lijinhong11.mittellib.gui.dialog.impl.input.TextInputDialog;
 import io.github.lijinhong11.mittellib.gui.inventory.MittelGUI;
 import io.github.lijinhong11.mittellib.gui.inventory.choosers.MaterialChooser;
@@ -23,6 +22,7 @@ import io.github.lijinhong11.mittelrandomevents.utils.Constants;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntConsumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -99,7 +99,7 @@ public final class MREGuiManager {
             return;
         }
         gui.putItem(
-                slot(3, 3),
+                slot(3, 2),
                 ButtonItem.clickable(
                         messagedItem(
                                 Material.LEVER, player, event.isEnabled() ? "gui.items.disable" : "gui.items.enable"),
@@ -110,7 +110,7 @@ public final class MREGuiManager {
                             return false;
                         }));
         gui.putItem(
-                slot(3, 5),
+                slot(3, 4),
                 ButtonItem.clickable(messagedItem(Material.NAME_TAG, player, "gui.items.rename"), (g, e) -> {
                     player.closeInventory();
                     TextInputDialog.create(
@@ -128,7 +128,7 @@ public final class MREGuiManager {
                     return false;
                 }));
         gui.putItem(
-                slot(3, 7),
+                slot(3, 6),
                 ButtonItem.clickable(messagedItem(Material.COMMAND_BLOCK, player, "gui.items.actions"), (g, e) -> {
                     openActionList(player, event, false);
                     return false;
@@ -140,13 +140,13 @@ public final class MREGuiManager {
                     return false;
                 }));
         gui.putItem(
-                slot(4, 5),
+                slot(4, 3),
                 ButtonItem.clickable(messagedItem(Material.COMPARATOR, player, "gui.items.conditions"), (g, e) -> {
                     openConditionList(player, event);
                     return false;
                 }));
         gui.putItem(
-                slot(4, 3),
+                slot(4, 5),
                 ButtonItem.clickable(messagedItem(Material.ITEM_FRAME, player, "gui.items.icon"), (g, e) -> {
                     MaterialChooser.openVanillaChooser(player, selected -> {
                         event.setIcon(selected.toItem().getType());
@@ -157,24 +157,23 @@ public final class MREGuiManager {
                 }));
         gui.putItem(
                 slot(4, 7), ButtonItem.clickable(messagedItem(Material.CLOCK, player, "gui.items.duration"), (g, e) -> {
-                    player.closeInventory();
-                    IntegerInputDialog.create(
-                                    msg(player, "gui.events.duration-title"),
-                                    msg(player, "gui.events.duration-label"),
-                                    event.durationSeconds(),
-                                    0,
-                                    Integer.MAX_VALUE,
-                                    value -> {
-                                        event.setDurationSeconds(value);
-                                        plugin().saveData();
-                                        openEventManagement(player, event);
-                                    },
-                                    () -> openEventManagement(player, event))
-                            .show(player);
+                    editInteger(
+                            player,
+                            "gui.events.duration-title",
+                            "gui.events.duration-label",
+                            event.durationSeconds(),
+                            0,
+                            Integer.MAX_VALUE,
+                            value -> {
+                                event.setDurationSeconds(value);
+                                plugin().saveData();
+                                openEventManagement(player, event);
+                            },
+                            () -> openEventManagement(player, event));
                     return false;
                 }));
         gui.putItem(
-                slot(5, 7), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
+                slot(5, 2), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
                     plugin().getEventManager().unregister(event.id());
                     plugin().getLineManager().lines().forEach(line -> line.events().stream()
                             .filter(registered -> registered.equals(event))
@@ -197,7 +196,7 @@ public final class MREGuiManager {
             return;
         }
         gui.putItem(
-                slot(3, 3),
+                slot(3, 2),
                 ButtonItem.clickable(
                         messagedItem(
                                 Material.REDSTONE_TORCH,
@@ -206,6 +205,9 @@ public final class MREGuiManager {
                         (g, e) -> {
                             if (plugin().getTaskMaker().isRunning(line.id())) {
                                 plugin().getTaskMaker().cancelLine(line.id());
+                            } else if (line.cron() == null) {
+                                editCron(player, line);
+                                return false;
                             } else {
                                 plugin().getTaskMaker()
                                         .startLine(line, () -> new DefaultEventContext(plugin().getEventManager()));
@@ -214,47 +216,22 @@ public final class MREGuiManager {
                             return false;
                         }));
         gui.putItem(
-                slot(3, 5),
+                slot(3, 4),
                 ButtonItem.clickable(messagedItem(Material.LIGHTNING_ROD, player, "gui.items.run"), (g, e) -> {
                     plugin().getTaskMaker().runOnce(line, () -> new DefaultEventContext(plugin().getEventManager()));
                     return false;
                 }));
         gui.putItem(
-                slot(3, 7),
-                ButtonItem.clickable(messagedItem(Material.NAME_TAG, player, "gui.items.rename"), (g, e) -> {
-                    player.closeInventory();
-                    TextInputDialog.create(
-                                    msg(player, "gui.common.rename-title"),
-                                    msg(player, "gui.common.rename-label"),
-                                    value -> {
-                                        line.setDisplayNameFunction(sender -> ComponentUtils.deserialize(value));
-                                        plugin().saveData();
-                                        openLineManagement(player, line);
-                                    },
-                                    256,
-                                    ComponentUtils.serialize(
-                                            line.getDisplayNameFunction().apply(player)),
-                                    () -> openLineManagement(player, line))
-                            .show(player);
-                    return false;
-                }));
-        gui.putItem(
-                slot(4, 5), ButtonItem.clickable(messagedItem(Material.BUNDLE, player, "gui.items.events"), (g, e) -> {
+                slot(3, 6), ButtonItem.clickable(messagedItem(Material.PAPER, player, "gui.items.events"), (g, e) -> {
                     openLineEvents(player, line);
                     return false;
                 }));
-        gui.putItem(
-                slot(4, 3),
-                ButtonItem.clickable(messagedItem(Material.REPEATER, player, "gui.items.interval"), (g, e) -> {
-                    editInterval(player, line);
-                    return false;
-                }));
-        gui.putItem(slot(4, 7), ButtonItem.clickable(messagedItem(Material.CLOCK, player, "gui.items.cron"), (g, e) -> {
+        gui.putItem(slot(4, 3), ButtonItem.clickable(messagedItem(Material.CLOCK, player, "gui.items.cron"), (g, e) -> {
             editCron(player, line);
             return false;
         }));
         gui.putItem(
-                slot(5, 5),
+                slot(4, 5),
                 ButtonItem.clickable(messagedItem(Material.ITEM_FRAME, player, "gui.items.icon"), (g, e) -> {
                     MaterialChooser.openVanillaChooser(player, selected -> {
                         line.setIcon(selected.toItem().getType());
@@ -264,7 +241,7 @@ public final class MREGuiManager {
                     return false;
                 }));
         gui.putItem(
-                slot(5, 7), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
+                slot(4, 7), ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.delete"), (g, e) -> {
                     plugin().getTaskMaker().cancelLine(line.id());
                     plugin().getLineManager().unregister(line.id());
                     plugin().saveData();
@@ -298,8 +275,11 @@ public final class MREGuiManager {
                         msg(player, "gui.lines.create.label"),
                         id -> {
                             if (plugin().getLineManager().get(id).isEmpty()) {
-                                plugin().getLineManager().register(new RandomEventLine(id, 0, List.of()));
+                                RandomEventLine line = new RandomEventLine(id, List.of());
+                                plugin().getLineManager().register(line);
                                 plugin().saveData();
+                                editCron(player, line);
+                                return;
                             }
                             openLineList(player);
                         },
@@ -618,21 +598,49 @@ public final class MREGuiManager {
         gui.open(player);
     }
 
-    private static void editInterval(Player player, RandomEventLine line) {
+    private static void editInteger(
+            Player player,
+            String titleKey,
+            String labelKey,
+            int currentValue,
+            int minimum,
+            int maximum,
+            IntConsumer onConfirm,
+            Runnable onCancel) {
         player.closeInventory();
-        IntegerInputDialog.create(
-                        msg(player, "gui.lines.interval-title"),
-                        msg(player, "gui.lines.interval-label"),
-                        0,
-                        Integer.MAX_VALUE,
+        TextInputDialog.create(
+                        msg(player, titleKey),
+                        msg(player, labelKey),
                         value -> {
-                            line.setIntervalSeconds(value);
-                            line.setCron(null);
-                            restart(line);
-                            plugin().saveData();
-                            openLineManagement(player, line);
+                            int parsed;
+                            try {
+                                parsed = Integer.parseInt(value.trim());
+                                if (parsed < minimum || parsed > maximum) {
+                                    throw new NumberFormatException("Integer outside allowed range");
+                                }
+                            } catch (NumberFormatException ignored) {
+                                plugin().getLanguageManager()
+                                        .sendMessage(
+                                                player,
+                                                "gui.common.invalid-integer",
+                                                MessageReplacement.replace("%min%", String.valueOf(minimum)),
+                                                MessageReplacement.replace("%max%", String.valueOf(maximum)));
+                                editInteger(
+                                        player,
+                                        titleKey,
+                                        labelKey,
+                                        currentValue,
+                                        minimum,
+                                        maximum,
+                                        onConfirm,
+                                        onCancel);
+                                return;
+                            }
+                            onConfirm.accept(parsed);
                         },
-                        () -> openLineManagement(player, line))
+                        32,
+                        String.valueOf(currentValue),
+                        onCancel)
                 .show(player);
     }
 
@@ -691,11 +699,12 @@ public final class MREGuiManager {
             return false;
         }));
         for (RandomEvent event : line.events()) {
-            ItemStack display = messagedItem(
+            ItemStack display = namedItem(
                     event.getIcon(),
                     player,
                     "gui.objects.line-event",
-                    MessageReplacement.replace("%name%", ComponentUtils.serialize(event.displayName(player))),
+                    event.getDisplayName(),
+                    MessageReplacement.replace("%name%", ComponentUtils.serialize(event.getDisplayName())),
                     MessageReplacement.replace("%id%", event.id()),
                     MessageReplacement.replace("%weight%", String.valueOf(line.weightOf(event))));
             gui.addPageItem(ButtonItem.clickable(display, (g, e) -> {
@@ -785,11 +794,12 @@ public final class MREGuiManager {
     }
 
     private static ItemStack objectItem(Player player, RandomEvent event) {
-        return messagedItem(
+        return namedItem(
                 event.getIcon(),
                 player,
                 "gui.objects.event",
-                MessageReplacement.replace("%name%", ComponentUtils.serialize(event.displayName(player))),
+                event.getDisplayName(),
+                MessageReplacement.replace("%name%", ComponentUtils.serialize(event.getDisplayName())),
                 MessageReplacement.replace("%id%", event.id()),
                 MessageReplacement.replace("%enabled%", String.valueOf(event.isEnabled())),
                 MessageReplacement.replace(
@@ -797,16 +807,24 @@ public final class MREGuiManager {
     }
 
     private static ItemStack objectItem(Player player, RandomEventLine line) {
-        return messagedItem(
+        return namedItem(
                 line.getIcon(),
                 player,
                 "gui.objects.line",
-                MessageReplacement.replace("%name%", ComponentUtils.serialize(line.displayName(player))),
+                Component.text(line.id()),
                 MessageReplacement.replace("%id%", line.id()),
+                MessageReplacement.replace("%cron%", line.cron() == null ? "" : line.cron()),
                 MessageReplacement.replace(
                         "%events%", String.valueOf(line.events().size())),
                 MessageReplacement.replace(
                         "%running%", String.valueOf(plugin().getTaskMaker().isRunning(line.id()))));
+    }
+
+    private static ItemStack namedItem(
+            Material material, Player player, String key, Component name, MessageReplacement... replacements) {
+        ItemStack item = messagedItem(material, player, key, replacements);
+        item.editMeta(meta -> meta.displayName(name));
+        return item;
     }
 
     private static ItemStack messagedItem(Material material, Player player, String key) {
