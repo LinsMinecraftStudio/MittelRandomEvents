@@ -13,7 +13,7 @@ import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
-import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
+import io.github.lijinhong11.mittelrandomevents.builtin.DefaultEventContext;
 import io.github.lijinhong11.mittelrandomevents.gui.MREGuiManager;
 import io.github.lijinhong11.mittelrandomevents.utils.Constants;
 import io.github.lijinhong11.mittelrandomevents.utils.RegistryUtils;

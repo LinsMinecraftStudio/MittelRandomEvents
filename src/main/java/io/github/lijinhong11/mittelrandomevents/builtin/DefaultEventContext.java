@@ -1,4 +1,4 @@
-package io.github.lijinhong11.mittelrandomevents.context;
+package io.github.lijinhong11.mittelrandomevents.builtin;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.event.ParameterContainer;

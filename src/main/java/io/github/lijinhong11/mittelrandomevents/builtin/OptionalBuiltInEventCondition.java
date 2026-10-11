@@ -26,7 +26,7 @@ public final class OptionalBuiltInEventCondition {
         public static EventCondition equals(String placeholder, String expected) {
             return configured(
                     "placeholder_player_equals", placeholder, expected, context -> context.getSelectedPlayers().stream()
-                            .map(player -> PlaceholderApiResolver.resolve(placeholder, player, context))
+                            .map(player -> PlaceholderApiResolver.resolve(placeholder, player))
                             .anyMatch(expected::equals));
         }
 
@@ -40,7 +40,7 @@ public final class OptionalBuiltInEventCondition {
         public static EventCondition serverEquals(String placeholder, String expected) {
             return configured(
                     "placeholder_server_equals", placeholder, expected, context -> PlaceholderApiResolver.resolve(
-                                    placeholder, context)
+                                    placeholder, null)
                             .equals(expected));
         }
     }
@@ -64,7 +64,7 @@ public final class OptionalBuiltInEventCondition {
                     placeholder,
                     expected,
                     context -> context.getSelectedPlayers().stream()
-                            .map(player -> MiniPlaceholdersResolver.resolve(placeholder, player, context))
+                            .map(player -> MiniPlaceholdersResolver.resolve(placeholder, player))
                             .anyMatch(expected::equals));
         }
     }

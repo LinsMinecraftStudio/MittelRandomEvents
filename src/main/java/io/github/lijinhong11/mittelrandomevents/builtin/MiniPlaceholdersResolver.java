@@ -1,6 +1,5 @@
 package io.github.lijinhong11.mittelrandomevents.builtin;
 
-import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.miniplaceholders.api.MiniPlaceholders;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -19,10 +18,9 @@ public final class MiniPlaceholdersResolver {
      *
      * @param value the MiniMessage value containing placeholders
      * @param player the player audience
-     * @param context the current event context
      * @return the serialized resolved value
      */
-    public static String resolve(String value, Player player, EventContext context) {
+    public static String resolve(String value, Player player) {
         MiniMessage miniMessage = MiniMessage.miniMessage();
         TagResolver placeholders = player == null
                 ? MiniPlaceholders.globalPlaceholders()

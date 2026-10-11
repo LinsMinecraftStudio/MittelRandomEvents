@@ -6,7 +6,7 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
-import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
+import io.github.lijinhong11.mittelrandomevents.builtin.DefaultEventContext;
 import java.util.Optional;
 import java.util.function.Supplier;
 

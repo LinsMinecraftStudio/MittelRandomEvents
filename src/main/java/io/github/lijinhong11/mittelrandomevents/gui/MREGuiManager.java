@@ -16,7 +16,7 @@ import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.builtin.BuiltInEventCondition;
-import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
+import io.github.lijinhong11.mittelrandomevents.builtin.DefaultEventContext;
 import io.github.lijinhong11.mittelrandomevents.data.EventConditionCodec;
 import io.github.lijinhong11.mittelrandomevents.utils.Constants;
 import java.util.LinkedHashMap;

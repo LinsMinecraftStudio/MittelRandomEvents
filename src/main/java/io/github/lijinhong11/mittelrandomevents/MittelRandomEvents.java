@@ -11,7 +11,7 @@ import io.github.lijinhong11.mittelrandomevents.api.line.DefaultRandomEventLineM
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLineManager;
 import io.github.lijinhong11.mittelrandomevents.builtin.BuiltInActionType;
 import io.github.lijinhong11.mittelrandomevents.command.MRECommands;
-import io.github.lijinhong11.mittelrandomevents.context.DefaultEventContext;
+import io.github.lijinhong11.mittelrandomevents.builtin.DefaultEventContext;
 import io.github.lijinhong11.mittelrandomevents.data.RandomEventDataManager;
 import io.github.lijinhong11.mittelrandomevents.data.RandomEventLineDataManager;
 import io.github.lijinhong11.mittelrandomevents.hook.MittelRandomEventsExpansion;

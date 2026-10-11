@@ -31,6 +31,19 @@ public interface ActionType {
     String id();
 
     /**
+     * Executes one configured action.
+     *
+     * <p>The {@code action} contains the type identifier and arbitrary configuration parameters.
+     * The {@code context} provides the runtime environment of the event, including selected
+     * players, selected worlds, shared data and the event manager.
+     *
+     * @param action the configured action instance to execute
+     * @param context the runtime context in which the action is executed
+     * @throws RuntimeException if the action cannot be executed
+     */
+    void execute(EventAction action, EventContext context);
+
+    /**
      * @return the direct display name component
      */
     default Component displayName() {
@@ -62,17 +75,4 @@ public interface ActionType {
     default Collection<String> parameterNames() {
         return List.of();
     }
-
-    /**
-     * Executes one configured action.
-     *
-     * <p>The {@code action} contains the type identifier and arbitrary configuration parameters.
-     * The {@code context} provides the runtime environment of the event, including selected
-     * players, selected worlds, shared data and the event manager.
-     *
-     * @param action the configured action instance to execute
-     * @param context the runtime context in which the action is executed
-     * @throws RuntimeException if the action cannot be executed
-     */
-    void execute(EventAction action, EventContext context);
 }
