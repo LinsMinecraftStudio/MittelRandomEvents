@@ -13,18 +13,28 @@ import java.util.Map;
  * selects the owning event, {@code RandomEventLine} resolves {@link #type()} through the action
  * type registry and passes this object to the registered action type.
  *
- * @param type the identifier of the registered action type
- * @param parameters the mutable action-specific parameter container
  */
 public final class EventAction {
     private final String type;
     private final ParameterContainer parameters;
     private List<EventCondition> conditions;
 
+    /**
+     * Creates an event action
+     *
+     * @param type the identifier of the registered action type
+     * @param parameters the mutable action-specific parameter container
+     */
     public EventAction(String type, Map<String, ?> parameters) {
         this(type, new ParameterContainer(parameters), List.of());
     }
 
+    /**
+     * Creates an event action
+     *
+     * @param type the identifier of the registered action type
+     * @param parameters the mutable action-specific parameter container
+     */
     public EventAction(String type, ParameterContainer parameters) {
         this(type, parameters, List.of());
     }
