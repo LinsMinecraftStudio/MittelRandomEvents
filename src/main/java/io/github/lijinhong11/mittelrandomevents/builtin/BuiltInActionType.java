@@ -37,8 +37,8 @@ public enum BuiltInActionType implements ActionType {
     SELECT_PLAYERS("select_players") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            String permission = stringParameter(action, "permission", "", context, null);
-            String worldName = stringParameter(action, "world", "", context, null);
+            String permission = stringParameter(action, "permission", "", null);
+            String worldName = stringParameter(action, "world", "", null);
 
             List<Player> players = Bukkit.getOnlinePlayers().stream()
                     .filter(player -> permission.isBlank() || player.hasPermission(permission))
@@ -46,7 +46,7 @@ public enum BuiltInActionType implements ActionType {
                             worldName.isBlank() || player.getWorld().getName().equals(worldName))
                     .collect(Collectors.toCollection(ArrayList::new));
             shuffle(players, context);
-            limit(players, amountParameter(action, context));
+            limit(players, amountParameter(action));
             context.setSelectedPlayers(players);
         }
     },
@@ -57,14 +57,14 @@ public enum BuiltInActionType implements ActionType {
     SELECT_WORLDS("select_worlds") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            String worldName = stringParameter(action, "world", "", context, null);
+            String worldName = stringParameter(action, "world", "", null);
             List<World> worlds = worldName.isBlank()
                     ? new ArrayList<>(Bukkit.getWorlds())
                     : Bukkit.getWorlds().stream()
                             .filter(world -> world.getName().equals(worldName))
                             .collect(Collectors.toCollection(ArrayList::new));
             shuffle(worlds, context);
-            limit(worlds, amountParameter(action, context));
+            limit(worlds, amountParameter(action));
             context.setSelectedWorlds(worlds);
         }
     },
@@ -96,8 +96,8 @@ public enum BuiltInActionType implements ActionType {
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player,
-                            selected -> selected.sendMessage(ComponentUtils.deserialize(
-                                    stringParameter(action, "message", "", context, selected)))));
+                            selected -> selected.sendMessage(
+                                    ComponentUtils.deserialize(stringParameter(action, "message", "", selected)))));
         }
     },
 
@@ -105,7 +105,7 @@ public enum BuiltInActionType implements ActionType {
     BROADCAST("broadcast") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            Bukkit.broadcast(ComponentUtils.deserialize(stringParameter(action, "message", "", context, null)));
+            Bukkit.broadcast(ComponentUtils.deserialize(stringParameter(action, "message", "", null)));
         }
     },
 
@@ -113,18 +113,15 @@ public enum BuiltInActionType implements ActionType {
     EXECUTE_CONSOLE_COMMAND("execute_console_command") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            if (booleanParameter(action, "runForEachPlayer", false, context, null)) {
+            if (booleanParameter(action, "runForEachPlayer", false, null)) {
                 context.getSelectedPlayers()
                         .forEach(player -> Bukkit.dispatchCommand(
                                 Bukkit.getConsoleSender(),
                                 interpolateCommand(
-                                        stringParameter(action, "command", "", context, player),
-                                        action,
-                                        context,
-                                        player)));
+                                        stringParameter(action, "command", "", player), action, context, player)));
                 return;
             }
-            String command = stringParameter(action, "command", "", context, null);
+            String command = stringParameter(action, "command", "", null);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), interpolateCommand(command, action, context, null));
         }
     },
@@ -136,8 +133,7 @@ public enum BuiltInActionType implements ActionType {
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player,
-                            selected -> selected.performCommand(
-                                    stringParameter(action, "command", "", context, selected))));
+                            selected -> selected.performCommand(stringParameter(action, "command", "", selected))));
         }
     },
 
@@ -145,7 +141,7 @@ public enum BuiltInActionType implements ActionType {
     HEAL_PLAYERS("heal_players") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            double amount = doubleParameter(action, "amount", 0.0D, context, null);
+            double amount = doubleParameter(action, "amount", 0.0D, null);
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player,
@@ -158,7 +154,7 @@ public enum BuiltInActionType implements ActionType {
     DAMAGE_PLAYERS("damage_players") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            double amount = Math.max(0.0D, doubleParameter(action, "amount", 0.0D, context, null));
+            double amount = Math.max(0.0D, doubleParameter(action, "amount", 0.0D, null));
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(player, selected -> selected.damage(amount)));
         }
@@ -178,9 +174,9 @@ public enum BuiltInActionType implements ActionType {
     PLAY_SOUND("play_sound") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            Sound sound = soundParameter(action, context);
-            float volume = (float) doubleParameter(action, "volume", 1.0D, context, null);
-            float pitch = (float) doubleParameter(action, "pitch", 1.0D, context, null);
+            Sound sound = soundParameter(action);
+            float volume = (float) doubleParameter(action, "volume", 1.0D, null);
+            float pitch = (float) doubleParameter(action, "pitch", 1.0D, null);
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player, selected -> selected.playSound(selected.getLocation(), sound, volume, pitch)));
@@ -191,8 +187,8 @@ public enum BuiltInActionType implements ActionType {
     SET_WEATHER("set_weather") {
         @Override
         public void execute(EventAction action, EventContext context) {
-            boolean storm = booleanParameter(action, "storm", false, context, null);
-            boolean thunder = booleanParameter(action, "thunder", false, context, null);
+            boolean storm = booleanParameter(action, "storm", false, null);
+            boolean thunder = booleanParameter(action, "thunder", false, null);
             context.getSelectedWorlds().forEach(world -> {
                 world.setStorm(storm);
                 world.setThundering(thunder);
@@ -243,13 +239,8 @@ public enum BuiltInActionType implements ActionType {
     }
 
     @Override
-    public List<Component> lore() {
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.text(descriptionText()));
-        if (!parameterNames().isEmpty()) {
-            lines.add(Component.text("Parameters: " + String.join(", ", parameterNames())));
-        }
-        return List.copyOf(lines);
+    public Component description() {
+        return Component.text(descriptionText());
     }
 
     private String displayNameText() {
@@ -307,13 +298,12 @@ public enum BuiltInActionType implements ActionType {
         };
     }
 
-    private static String stringParameter(
-            EventAction action, String key, String defaultValue, EventContext context, Player player) {
+    private static String stringParameter(EventAction action, String key, String defaultValue, Player player) {
         Object value = action.parameters().get(key);
         return value == null ? defaultValue : StringUtils.parsePlaceholders(player, String.valueOf(value));
     }
 
-    private static int amountParameter(EventAction action, EventContext context) {
+    private static int amountParameter(EventAction action) {
         Object value = action.parameters().get("amount");
         if (value instanceof Number number) {
             return Math.max(0, number.intValue());
@@ -328,8 +318,7 @@ public enum BuiltInActionType implements ActionType {
         }
     }
 
-    private static double doubleParameter(
-            EventAction action, String key, double defaultValue, EventContext context, Player player) {
+    private static double doubleParameter(EventAction action, String key, double defaultValue, Player player) {
         Object value = action.parameters().get(key);
         if (value instanceof Number number) {
             return number.doubleValue();
@@ -343,8 +332,7 @@ public enum BuiltInActionType implements ActionType {
         }
     }
 
-    private static boolean booleanParameter(
-            EventAction action, String key, boolean defaultValue, EventContext context, Player player) {
+    private static boolean booleanParameter(EventAction action, String key, boolean defaultValue, Player player) {
         Object value = action.parameters().get(key);
         return value == null
                 ? defaultValue
@@ -352,9 +340,9 @@ public enum BuiltInActionType implements ActionType {
     }
 
     /**
-     * Expands action/context parameters in a console command. Supported forms are {@code {name}},
-     * {@code ${name}} and {@code %name%}. When a player is supplied, common player values are also
-     * available as {@code playerName}, {@code playerUuid}, {@code playerWorld}, {@code playerX},
+     * Expands action/context parameters in a console command using {@code %name%}. When a player
+     * is supplied, common player values are also available as {@code player}, {@code playerUuid},
+     * {@code playerWorld}, {@code playerX},
      * {@code playerY} and {@code playerZ}.
      */
     private static String interpolateCommand(String command, EventAction action, EventContext context, Player player) {
@@ -377,8 +365,8 @@ public enum BuiltInActionType implements ActionType {
         return result;
     }
 
-    private static Sound soundParameter(EventAction action, EventContext context) {
-        String value = stringParameter(action, "sound", "minecraft:block.note_block.pling", context, null);
+    private static Sound soundParameter(EventAction action) {
+        String value = stringParameter(action, "sound", "minecraft:block.note_block.pling", null);
         Sound sound = RegistryUtils.get(Registry.SOUND_EVENT, value);
         if (sound == null) {
             throw new IllegalArgumentException("Unknown sound: " + value);

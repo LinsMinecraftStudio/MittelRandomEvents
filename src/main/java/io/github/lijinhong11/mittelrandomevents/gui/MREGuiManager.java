@@ -383,14 +383,7 @@ public final class MREGuiManager {
             return false;
         }));
         for (EventCondition condition : action.conditions()) {
-            ItemStack display = messagedItem(
-                    condition.icon(),
-                    player,
-                    "gui.objects.condition",
-                    MessageReplacement.replace("%name%", ComponentUtils.serialize(conditionName(player, condition))),
-                    MessageReplacement.replace("%type%", String.valueOf(condition.type())),
-                    MessageReplacement.replace(
-                            "%parameters%", condition.parameters().toString()));
+            ItemStack display = conditionItem(player, condition, "gui.objects.condition");
             gui.addPageItem(ButtonItem.clickable(display, (g, e) -> {
                 if (e.getClick().isRightClick()) {
                     if (action.removeCondition(condition)) plugin().saveData();
@@ -411,17 +404,8 @@ public final class MREGuiManager {
                 "gui.conditions.chooser-title",
                 () -> openActionConditionList(player, event, action, type, ending));
         for (EventCondition condition : conditionTemplates()) {
-            gui.addPageItem(ButtonItem.clickable(
-                    messagedItem(
-                            condition.icon(),
-                            player,
-                            "gui.objects.condition-template",
-                            MessageReplacement.replace(
-                                    "%name%", ComponentUtils.serialize(conditionName(player, condition))),
-                            MessageReplacement.replace("%type%", String.valueOf(condition.type())),
-                            MessageReplacement.replace(
-                                    "%parameters%", condition.parameters().toString())),
-                    (g, e) -> {
+            gui.addPageItem(
+                    ButtonItem.clickable(conditionItem(player, condition, "gui.objects.condition-template"), (g, e) -> {
                         action.addCondition(condition);
                         plugin().saveData();
                         openActionConditionList(player, event, action, type, ending);
@@ -463,13 +447,9 @@ public final class MREGuiManager {
                                         "gui.common.parameter",
                                         MessageReplacement.replace("%value%", entry.getKey())),
                                 value -> {
-                                    Map<String, Object> encoded = EventConditionCodec.encode(condition);
-                                    Map<String, Object> parameters = new LinkedHashMap<>(
-                                            EventConditionCodec.stringMap(encoded.get("parameters")));
-                                    parameters.put(entry.getKey(), scalar(value));
-                                    encoded.put("parameters", parameters);
+                                    EventCondition updated = withConditionParameter(condition, entry.getKey(), value);
                                     action.removeCondition(condition);
-                                    action.addCondition(EventConditionCodec.decode(encoded));
+                                    action.addCondition(updated);
                                     plugin().saveData();
                                     openActionConditionList(player, event, action, type, ending);
                                 },
@@ -505,14 +485,7 @@ public final class MREGuiManager {
         }));
         for (int index = 0; index < event.conditions().size(); index++) {
             EventCondition condition = event.conditions().get(index);
-            ItemStack display = messagedItem(
-                    condition.icon(),
-                    player,
-                    "gui.objects.condition",
-                    MessageReplacement.replace("%name%", ComponentUtils.serialize(conditionName(player, condition))),
-                    MessageReplacement.replace("%type%", String.valueOf(condition.type())),
-                    MessageReplacement.replace(
-                            "%parameters%", condition.parameters().toString()));
+            ItemStack display = conditionItem(player, condition, "gui.objects.condition");
             int conditionIndex = index;
             gui.addPageItem(ButtonItem.clickable(display, (g, e) -> {
                 if (e.getClick().isRightClick()) {
@@ -530,25 +503,9 @@ public final class MREGuiManager {
 
     private static void openConditionChooser(Player player, RandomEvent event) {
         PaginatedChestGUI gui = paged(player, "gui.conditions.chooser-title", () -> openConditionList(player, event));
-        List<EventCondition> templates = List.of(
-                BuiltInEventCondition.players(0, Integer.MAX_VALUE),
-                BuiltInEventCondition.worlds(0, Integer.MAX_VALUE),
-                BuiltInEventCondition.serverOnlinePlayers(0, Integer.MAX_VALUE),
-                BuiltInEventCondition.serverTpsAtLeast(0.0D),
-                BuiltInEventCondition.serverPluginEnabled("PluginName"),
-                BuiltInEventCondition.serverVersionContains("version"));
-        for (EventCondition condition : templates) {
-            gui.addPageItem(ButtonItem.clickable(
-                    messagedItem(
-                            condition.icon(),
-                            player,
-                            "gui.objects.condition-template",
-                            MessageReplacement.replace(
-                                    "%name%", ComponentUtils.serialize(conditionName(player, condition))),
-                            MessageReplacement.replace("%type%", String.valueOf(condition.type())),
-                            MessageReplacement.replace(
-                                    "%parameters%", condition.parameters().toString())),
-                    (g, e) -> {
+        for (EventCondition condition : conditionTemplates()) {
+            gui.addPageItem(
+                    ButtonItem.clickable(conditionItem(player, condition, "gui.objects.condition-template"), (g, e) -> {
                         event.addCondition(condition);
                         plugin().saveData();
                         openConditionList(player, event);
@@ -579,12 +536,8 @@ public final class MREGuiManager {
                                         "gui.common.parameter",
                                         MessageReplacement.replace("%value%", entry.getKey())),
                                 value -> {
-                                    Map<String, Object> encoded = EventConditionCodec.encode(condition);
-                                    Map<String, Object> parameters = new LinkedHashMap<>(
-                                            EventConditionCodec.stringMap(encoded.get("parameters")));
-                                    parameters.put(entry.getKey(), scalar(value));
-                                    encoded.put("parameters", parameters);
-                                    event.setCondition(conditionIndex, EventConditionCodec.decode(encoded));
+                                    event.setCondition(
+                                            conditionIndex, withConditionParameter(condition, entry.getKey(), value));
                                     plugin().saveData();
                                     openConditionParameters(player, event, conditionIndex);
                                 },
@@ -596,6 +549,14 @@ public final class MREGuiManager {
             }));
         }
         gui.open(player);
+    }
+
+    private static EventCondition withConditionParameter(EventCondition condition, String key, String value) {
+        Map<String, Object> encoded = EventConditionCodec.encode(condition);
+        Map<String, Object> parameters = new LinkedHashMap<>(EventConditionCodec.stringMap(encoded.get("parameters")));
+        parameters.put(key, scalar(value));
+        encoded.put("parameters", parameters);
+        return EventConditionCodec.decode(encoded);
     }
 
     private static void editInteger(
@@ -827,6 +788,17 @@ public final class MREGuiManager {
         return item;
     }
 
+    private static ItemStack conditionItem(Player player, EventCondition condition, String key) {
+        return messagedItem(
+                condition.icon(),
+                player,
+                key,
+                MessageReplacement.replace("%name%", ComponentUtils.serialize(conditionName(player, condition))),
+                MessageReplacement.replace("%type%", String.valueOf(condition.type())),
+                MessageReplacement.replace(
+                        "%parameters%", condition.parameters().toString()));
+    }
+
     private static ItemStack messagedItem(Material material, Player player, String key) {
         return plugin().getLanguageManager().getMessagedItem(material, key, player);
     }
@@ -853,18 +825,6 @@ public final class MREGuiManager {
         return type == null
                 ? condition.displayName()
                 : localizedOrDefault(player, "mre.condition." + type + ".name", condition.displayName());
-    }
-
-    private static List<Component> actionLore(Player player, ActionType type) {
-        Component description = actionDescription(player, type);
-        if (description.equals(Component.empty())) return type.lore();
-        if (type.parameterNames().isEmpty()) return List.of(description);
-        return List.of(
-                description,
-                msg(
-                        player,
-                        "gui.common.parameters",
-                        MessageReplacement.replace("%value%", String.join(", ", type.parameterNames()))));
     }
 
     private static Component actionDescription(Player player, ActionType type) {

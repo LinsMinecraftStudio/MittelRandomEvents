@@ -1,6 +1,7 @@
 package io.github.lijinhong11.mittelrandomevents.api.action;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
+import java.util.Collection;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -44,19 +45,6 @@ public interface ActionType {
     }
 
     /**
-     * Returns the lore lines shown by configuration UIs for this action type.
-     *
-     * <p>The default keeps older action implementations compatible by exposing their description
-     * as one lore line when it is not empty.
-     *
-     * @return immutable GUI lore lines
-     */
-    default List<Component> lore() {
-        Component description = description();
-        return description.equals(Component.empty()) ? List.of() : List.of(description);
-    }
-
-    /**
      * @return the material used as this action type's GUI icon
      */
     default Material icon() {
@@ -71,8 +59,8 @@ public interface ActionType {
      *
      * @return supported parameter names
      */
-    default java.util.Collection<String> parameterNames() {
-        return java.util.List.of();
+    default Collection<String> parameterNames() {
+        return List.of();
     }
 
     /**
