@@ -4,7 +4,9 @@ import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
 import java.util.Collection;
 import java.util.Random;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Runtime data supplied to conditions and action types while a random event is being processed.
@@ -19,6 +21,16 @@ public interface EventContext {
      * @return the current random event manager
      */
     RandomEventManager manager();
+
+    /** Returns the trial executor, or null for normal executions whose results go to the console. */
+    default @Nullable CommandSender trialExecutor() {
+        return null;
+    }
+
+    /** Returns whether this execution was started as a trial by an explicit sender. */
+    default boolean isTrialRun() {
+        return trialExecutor() != null;
+    }
 
     /**
      * Returns the source of randomness used by event selection.

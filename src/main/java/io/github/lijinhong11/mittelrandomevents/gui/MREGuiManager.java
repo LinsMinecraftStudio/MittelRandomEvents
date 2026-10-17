@@ -17,11 +17,12 @@ import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
 import io.github.lijinhong11.mittelrandomevents.builtin.BuiltInEventCondition;
 import io.github.lijinhong11.mittelrandomevents.builtin.DefaultEventContext;
-import io.github.lijinhong11.mittelrandomevents.data.EventConditionCodec;
+import io.github.lijinhong11.mittelrandomevents.data.EventConditionSerialization;
 import io.github.lijinhong11.mittelrandomevents.utils.Constants;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -218,7 +219,8 @@ public final class MREGuiManager {
         gui.putItem(
                 slot(3, 4),
                 ButtonItem.clickable(messagedItem(Material.LIGHTNING_ROD, player, "gui.items.run"), (g, e) -> {
-                    plugin().getTaskMaker().runOnce(line, () -> new DefaultEventContext(plugin().getEventManager()));
+                    plugin().getTaskMaker()
+                            .runOnce(line, () -> DefaultEventContext.trialRun(plugin().getEventManager(), player));
                     return false;
                 }));
         gui.putItem(
@@ -552,11 +554,12 @@ public final class MREGuiManager {
     }
 
     private static EventCondition withConditionParameter(EventCondition condition, String key, String value) {
-        Map<String, Object> encoded = EventConditionCodec.encode(condition);
-        Map<String, Object> parameters = new LinkedHashMap<>(EventConditionCodec.stringMap(encoded.get("parameters")));
+        Map<String, Object> encoded = EventConditionSerialization.encode(condition);
+        Map<String, Object> parameters =
+                new LinkedHashMap<>(EventConditionSerialization.stringMap(encoded.get("parameters")));
         parameters.put(key, scalar(value));
         encoded.put("parameters", parameters);
-        return EventConditionCodec.decode(encoded);
+        return EventConditionSerialization.decode(encoded);
     }
 
     private static void editInteger(
@@ -739,7 +742,7 @@ public final class MREGuiManager {
                 .build();
     }
 
-    private static void putBack(ChestGUI gui, Player player, java.util.function.Consumer<Player> back) {
+    private static void putBack(ChestGUI gui, Player player, Consumer<Player> back) {
         gui.putItem(8, ButtonItem.clickable(messagedItem(Material.BARRIER, player, "gui.items.back"), (g, e) -> {
             back.accept(player);
             return false;

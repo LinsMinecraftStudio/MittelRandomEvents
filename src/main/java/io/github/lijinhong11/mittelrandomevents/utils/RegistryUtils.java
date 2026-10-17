@@ -4,12 +4,13 @@ import java.util.Locale;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.jetbrains.annotations.Nullable;
 
 /** Helpers for resolving Bukkit registry-backed values from configuration strings. */
 public final class RegistryUtils {
     private RegistryUtils() {}
 
-    public static <T extends Keyed> T get(Registry<T> registry, String value) {
+    public static <T extends Keyed> @Nullable T get(Registry<T> registry, String value) {
         if (value == null || value.isBlank()) {
             return null;
         }

@@ -1,9 +1,27 @@
 mre:
   event:
+    execution:
+      summary:
+        - "<#D7B769>Event Execution Summary"
+        - "<gray>Line: <white>%line%"
+        - "<gray>Event: <white>%event%"
+        - "<gray>Succeeded: <green>%success%"
+        - "<gray>Failed: <red>%failed%"
+        - "<gray>Skipped: <yellow>%skipped%"
+      running: "<yellow>Line %line% already has an active event."
+      no_event: "<yellow>Line %line% has no eligible event to execute."
     example_broadcast:
       name: "Example Broadcast"
       description: "Broadcasts a configured message"
   action:
+    error:
+      value_not_presented: "<red>Missing required action parameter: %parameter%."
+      invalid_value: "<red>Invalid value for action parameter %parameter%: %value%."
+      int_range: "<red>Action parameter %parameter% must be an integer between %min% and %max% (inclusive)."
+      long_range: "<red>Action parameter %parameter% must be a long integer between %min% and %max% (inclusive)."
+      float_range: "<red>Action parameter %parameter% must be a finite float between %min% and %max% (inclusive)."
+      double_range: "<red>Action parameter %parameter% must be a finite double between %min% and %max% (inclusive)."
+      command_failed: "<red>The action command could not be executed."
     select_players:
       name: "Select Players"
       description: "Selects online players for following actions"
@@ -138,7 +156,11 @@ command:
     unknown: "Unknown %type%."
   events:
     list: "Events (%count%): %events%"
-    info: "Event %id% enabled=%enabled% actions=%actions% conditions=%conditions%"
+    info:
+      - "<#D7B769>Event %id%"
+      - "<gray>Enabled: <white>%enabled%"
+      - "<gray>Actions: <white>%actions%"
+      - "<gray>Conditions: <white>%conditions%"
     exists: "Event already exists."
     create: "Created event %id%."
     delete: "Deleted event %id%."
@@ -161,7 +183,6 @@ command:
       icon: "Updated line icon."
     start: "Started line %id%."
     stop: "Stopped line %id%."
-    run: "Ran line %id% once."
 gui:
   home:
     title: "<#D7B769><bold>MittelRandomEvents</bold>"

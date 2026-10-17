@@ -4,6 +4,7 @@ import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -30,7 +31,7 @@ public abstract class AbstractYamlDataManager<T> {
     protected final List<T> loadAll() {
         return configuration.getKeys(false).stream()
                 .map(this::load)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .toList();
     }
 

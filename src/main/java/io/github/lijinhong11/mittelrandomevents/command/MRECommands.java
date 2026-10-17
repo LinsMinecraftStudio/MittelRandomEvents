@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.github.lijinhong11.mittellib.message.MessageReplacement;
@@ -106,7 +107,7 @@ public final class MRECommands {
                 .build();
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> eventEnabled() {
+    private static ArgumentBuilder<CommandSourceStack, ?> eventEnabled() {
         return Commands.literal("enabled")
                 .then(Commands.argument("value", BoolArgumentType.bool()).executes(c -> {
                     RandomEvent event = event(c.getArgument("id", String.class));
@@ -118,7 +119,7 @@ public final class MRECommands {
                 }));
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> eventDisplayName() {
+    private static ArgumentBuilder<CommandSourceStack, ?> eventDisplayName() {
         return Commands.literal("display-name")
                 .then(Commands.argument("value", StringArgumentType.greedyString())
                         .executes(c -> {
@@ -131,7 +132,7 @@ public final class MRECommands {
                         }));
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> eventIcon() {
+    private static ArgumentBuilder<CommandSourceStack, ?> eventIcon() {
         return Commands.literal("icon")
                 .then(Commands.argument("material", StringArgumentType.word()).executes(c -> {
                     RandomEvent event = event(c.getArgument("id", String.class));
@@ -210,7 +211,7 @@ public final class MRECommands {
                 .build();
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> lineCron() {
+    private static ArgumentBuilder<CommandSourceStack, ?> lineCron() {
         return Commands.literal("cron")
                 .then(Commands.argument("expression", StringArgumentType.greedyString())
                         .executes(c -> {
@@ -224,7 +225,7 @@ public final class MRECommands {
                         }));
     }
 
-    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> lineIcon() {
+    private static ArgumentBuilder<CommandSourceStack, ?> lineIcon() {
         return Commands.literal("icon")
                 .then(Commands.argument("material", StringArgumentType.word()).executes(c -> {
                     RandomEventLine line = line(c.getArgument("id", String.class));
@@ -287,13 +288,16 @@ public final class MRECommands {
     private static int eventInfo(CommandContext<CommandSourceStack> c, String id) {
         RandomEvent event = event(id);
         if (event == null) return missing(c.getSource().getSender(), "event");
-        send(
-                c.getSource().getSender(),
-                "command.events.info",
-                replacement("%id%", event.id()),
-                replacement("%enabled%", String.valueOf(event.isEnabled())),
-                replacement("%actions%", String.valueOf(event.actions().size())),
-                replacement("%conditions%", String.valueOf(event.conditions().size())));
+        plugin().getLanguageManager()
+                .sendMessages(
+                        c.getSource().getSender(),
+                        "command.events.info",
+                        replacement("%id%", event.id()),
+                        replacement("%enabled%", String.valueOf(event.isEnabled())),
+                        replacement("%actions%", String.valueOf(event.actions().size())),
+                        replacement(
+                                "%conditions%",
+                                String.valueOf(event.conditions().size())));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -368,8 +372,8 @@ public final class MRECommands {
     private static int runLine(CommandContext<CommandSourceStack> c, String id) {
         RandomEventLine line = line(id);
         if (line == null) return missing(c.getSource().getSender(), "line");
-        plugin().getTaskMaker().runOnce(line, () -> new DefaultEventContext(plugin().getEventManager()));
-        send(c.getSource().getSender(), "command.lines.run", replacement("%id%", id));
+        CommandSender executor = c.getSource().getSender();
+        plugin().getTaskMaker().runOnce(line, () -> DefaultEventContext.trialRun(plugin().getEventManager(), executor));
         return Command.SINGLE_SUCCESS;
     }
 

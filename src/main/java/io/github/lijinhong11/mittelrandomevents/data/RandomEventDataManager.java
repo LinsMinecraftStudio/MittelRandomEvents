@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -50,7 +51,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         event.setIcon(material(section.getString("icon"), event.getIcon()));
         List<EventCondition> conditions = new ArrayList<>();
         for (Map<?, ?> rawCondition : section.getMapList("conditions")) {
-            conditions.add(EventConditionCodec.decode(rawCondition));
+            conditions.add(EventConditionSerialization.decode(rawCondition));
         }
         event.setConditions(conditions);
         return event;
@@ -69,7 +70,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
             if (rawAction.get("conditions") instanceof Iterable<?> rawConditions) {
                 for (Object rawCondition : rawConditions) {
                     if (rawCondition instanceof Map<?, ?> map) {
-                        actionConditions.add(EventConditionCodec.decode(map));
+                        actionConditions.add(EventConditionSerialization.decode(map));
                     }
                 }
             }
@@ -86,7 +87,9 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         section.set("icon", event.getIcon().name());
         section.set(
                 "conditions",
-                event.conditions().stream().map(EventConditionCodec::encode).toList());
+                event.conditions().stream()
+                        .map(EventConditionSerialization::encode)
+                        .toList());
         section.set("start-actions", encodeActions(event.actions()));
         section.set("end-actions", encodeActions(event.endActions()));
     }
@@ -100,7 +103,7 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
                     values.put(
                             "conditions",
                             action.conditions().stream()
-                                    .map(EventConditionCodec::encode)
+                                    .map(EventConditionSerialization::encode)
                                     .toList());
                     return values;
                 })
@@ -125,11 +128,11 @@ public final class RandomEventDataManager extends AbstractYamlDataManager<Random
         saveConfiguration();
     }
 
-    private static org.bukkit.Material material(String value, org.bukkit.Material fallback) {
+    private static Material material(String value, Material fallback) {
         if (value == null) {
             return fallback;
         }
-        org.bukkit.Material material = RegistryUtils.get(Registry.MATERIAL, value);
+        Material material = RegistryUtils.get(Registry.MATERIAL, value);
         return material == null ? fallback : material;
     }
 }

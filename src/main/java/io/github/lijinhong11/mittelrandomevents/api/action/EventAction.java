@@ -2,9 +2,11 @@ package io.github.lijinhong11.mittelrandomevents.api.action;
 
 import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 import io.github.lijinhong11.mittelrandomevents.api.event.ParameterContainer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * One configured action belonging to a {@code RandomEvent}.
@@ -80,13 +82,13 @@ public final class EventAction {
     }
 
     public void addCondition(EventCondition condition) {
-        java.util.ArrayList<EventCondition> updated = new java.util.ArrayList<>(conditions);
-        updated.add(java.util.Objects.requireNonNull(condition, "condition"));
+        ArrayList<EventCondition> updated = new ArrayList<>(conditions);
+        updated.add(Objects.requireNonNull(condition, "condition"));
         conditions = List.copyOf(updated);
     }
 
     public boolean removeCondition(EventCondition condition) {
-        java.util.ArrayList<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        ArrayList<EventCondition> updated = new ArrayList<>(conditions);
         if (!updated.remove(condition)) return false;
         conditions = List.copyOf(updated);
         return true;

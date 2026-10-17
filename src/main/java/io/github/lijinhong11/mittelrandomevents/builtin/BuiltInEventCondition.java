@@ -3,6 +3,8 @@ package io.github.lijinhong11.mittelrandomevents.builtin;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventCondition;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -219,7 +221,7 @@ public final class BuiltInEventCondition {
      * @return the combined condition
      */
     public static EventCondition allOf(Collection<? extends EventCondition> conditions) {
-        java.util.List<EventCondition> copied = java.util.List.copyOf(conditions);
+        List<EventCondition> copied = List.copyOf(conditions);
         return configured("all_of", compositeParameters(copied), context -> copied.stream()
                 .allMatch(condition -> condition.test(context)));
     }
@@ -231,7 +233,7 @@ public final class BuiltInEventCondition {
      * @return the combined condition
      */
     public static EventCondition anyOf(Collection<? extends EventCondition> conditions) {
-        java.util.List<EventCondition> copied = java.util.List.copyOf(conditions);
+        List<EventCondition> copied = List.copyOf(conditions);
         return configured("any_of", compositeParameters(copied), context -> copied.stream()
                 .anyMatch(condition -> condition.test(context)));
     }
@@ -246,7 +248,7 @@ public final class BuiltInEventCondition {
         if (condition == null) {
             throw new IllegalArgumentException("Condition must not be null");
         }
-        Map<String, Object> parameters = new java.util.LinkedHashMap<>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("type", condition.type());
         parameters.put("parameters", condition.parameters());
         return configured("not", parameters, context -> !condition.test(context));
@@ -295,7 +297,7 @@ public final class BuiltInEventCondition {
                             if (condition.type() == null || condition.type().isBlank()) {
                                 throw new IllegalArgumentException("Nested condition is not serializable");
                             }
-                            Map<String, Object> values = new java.util.LinkedHashMap<>();
+                            Map<String, Object> values = new LinkedHashMap<>();
                             values.put("type", condition.type());
                             values.put("parameters", condition.parameters());
                             return values;

@@ -1,6 +1,9 @@
 package io.github.lijinhong11.mittelrandomevents.api.line;
 
+import io.github.lijinhong11.mittellib.message.MessageReplacement;
 import io.github.lijinhong11.mittellib.utils.random.WeightedRandomMap;
+import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
+import io.github.lijinhong11.mittelrandomevents.api.action.ActionResult;
 import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEvent;
@@ -12,7 +15,9 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +38,9 @@ public class RandomEventLine {
     private RandomEvent currentEvent;
     private EventContext currentContext;
     private long currentEventEndsAtMillis;
+    private int successfulActions;
+    private int failedActions;
+    private int skippedActions;
 
     @Getter
     @Setter
@@ -216,50 +224,87 @@ public class RandomEventLine {
      * @throws IllegalArgumentException if a selected action references an unknown action type
      * @throws RuntimeException if an action type fails during execution
      */
-    public Optional<RandomEvent> execute(EventContext context) {
+    public synchronized Optional<RandomEvent> execute(EventContext context) {
         Objects.requireNonNull(context, "context");
         long now = System.currentTimeMillis();
         if (currentEvent != null) {
             if (now < currentEventEndsAtMillis) {
+                if (context.isTrialRun()) {
+                    sendExecutionMessage(context, "mre.event.execution.running");
+                }
                 return Optional.of(currentEvent);
             }
-            currentContext.resetExecutionControl();
-            executeActions(currentEvent.endActions(), currentContext);
-            currentEvent = null;
-            currentContext = null;
-            currentEventEndsAtMillis = 0L;
+            finish(currentContext);
             return Optional.empty();
         }
         Optional<RandomEvent> selected = select(context);
+        if (selected.isEmpty() && context.isTrialRun()) {
+            sendExecutionMessage(context, "mre.event.execution.no_event");
+        }
         selected.ifPresent(event -> {
             currentEvent = event;
             currentContext = context;
-            executeActions(event.actions(), context);
+            successfulActions = 0;
+            failedActions = 0;
+            skippedActions = 0;
             context.resetExecutionControl();
+            currentEventEndsAtMillis = now + event.durationSeconds() * 1000L;
+            executeActions(event.actions(), context);
             if (event.durationSeconds() <= 0) {
-                executeActions(event.endActions(), context);
-                currentEvent = null;
-                currentContext = null;
-            } else {
-                currentEventEndsAtMillis = now + event.durationSeconds() * 1000L;
+                finish(context);
             }
         });
         return selected;
     }
 
-    public RandomEvent currentEvent() {
+    /**
+     * Finishes an elapsed event started with this exact context and sends its execution summary.
+     * Calls for an older execution have no effect.
+     */
+    public synchronized void finish(EventContext context) {
+        if (currentEvent == null
+                || currentContext != context
+                || System.currentTimeMillis() < currentEventEndsAtMillis) {
+            return;
+        }
+        try {
+            context.resetExecutionControl();
+            executeActions(currentEvent.endActions(), context);
+            CommandSender executor = context.trialExecutor();
+            MittelRandomEvents.getInstance()
+                    .getLanguageManager()
+                    .sendMessages(
+                            executor == null ? Bukkit.getConsoleSender() : executor,
+                            "mre.event.execution.summary",
+                            MessageReplacement.replace("%line%", id),
+                            MessageReplacement.replace("%event%", currentEvent.id()),
+                            MessageReplacement.replace("%success%", String.valueOf(successfulActions)),
+                            MessageReplacement.replace("%failed%", String.valueOf(failedActions)),
+                            MessageReplacement.replace("%skipped%", String.valueOf(skippedActions)));
+        } finally {
+            currentEvent = null;
+            currentContext = null;
+            currentEventEndsAtMillis = 0L;
+        }
+    }
+
+    public synchronized RandomEvent currentEvent() {
         return currentEvent;
     }
 
     private void executeActions(List<EventAction> actions, EventContext context) {
-        for (EventAction action : actions) {
+        for (int index = 0; index < actions.size(); index++) {
             if (context.isStopped()) {
+                skippedActions += actions.size() - index;
                 break;
             }
+            EventAction action = actions.get(index);
             if (context.consumeSkipNext()) {
+                skippedActions++;
                 continue;
             }
             if (!action.conditions().stream().allMatch(condition -> condition.test(context))) {
+                skippedActions++;
                 continue;
             }
             execute(action, context);
@@ -268,12 +313,26 @@ public class RandomEventLine {
 
     private void execute(EventAction action, EventContext context) {
         // All actions receive this same context, allowing earlier actions to prepare later ones.
-        context.manager()
+        var actionType = context.manager()
                 .getActionType(action.type())
-                .ifPresentOrElse(actionType -> actionType.execute(action, context), () -> throwUnknownAction(action));
+                .orElseThrow(() -> new IllegalArgumentException("Unknown action type: " + action.type()));
+        ActionResult result = Objects.requireNonNull(actionType.execute(action, context), "action result");
+        if (result.isSuccessful()) {
+            successfulActions++;
+        } else {
+            failedActions++;
+        }
+        CommandSender executor = context.trialExecutor();
+        result.sendMessage(executor == null ? Bukkit.getConsoleSender() : executor);
     }
 
-    private void throwUnknownAction(EventAction action) {
-        throw new IllegalArgumentException("Unknown action type: " + action.type());
+    private void sendExecutionMessage(EventContext context, String key) {
+        CommandSender executor = context.trialExecutor();
+        MittelRandomEvents.getInstance()
+                .getLanguageManager()
+                .sendMessage(
+                        executor == null ? Bukkit.getConsoleSender() : executor,
+                        key,
+                        MessageReplacement.replace("%line%", id));
     }
 }

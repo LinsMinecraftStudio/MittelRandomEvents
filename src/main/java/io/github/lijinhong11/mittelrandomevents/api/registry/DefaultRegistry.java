@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Default insertion-ordered registry implementation.
@@ -16,7 +17,7 @@ import java.util.Optional;
  */
 class DefaultRegistry<T> implements Registry<T> {
     private final Map<String, T> values = new LinkedHashMap<>();
-    private final java.util.function.Function<T, String> idResolver;
+    private final Function<T, String> idResolver;
 
     /**
      * Creates a registry with an ID resolver.
@@ -24,7 +25,7 @@ class DefaultRegistry<T> implements Registry<T> {
      * @param idResolver function used to obtain the ID of each value
      * @throws NullPointerException if the resolver is null
      */
-    public DefaultRegistry(java.util.function.Function<T, String> idResolver) {
+    public DefaultRegistry(Function<T, String> idResolver) {
         this.idResolver = idResolver;
     }
 

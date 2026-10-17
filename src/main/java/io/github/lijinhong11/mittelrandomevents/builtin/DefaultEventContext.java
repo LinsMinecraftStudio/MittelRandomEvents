@@ -6,10 +6,13 @@ import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Default mutable context created for one RandomEventLine execution.
@@ -17,6 +20,7 @@ import org.bukkit.entity.Player;
 public final class DefaultEventContext implements EventContext {
     private final RandomEventManager manager;
     private final Random random;
+    private final @Nullable CommandSender trialExecutor;
     private final long startedAtMillis;
     private final ParameterContainer parameters = new ParameterContainer();
     private boolean stopped;
@@ -29,11 +33,26 @@ public final class DefaultEventContext implements EventContext {
     }
 
     public DefaultEventContext(RandomEventManager manager, Random random) {
+        this(manager, random, null);
+    }
+
+    public DefaultEventContext(RandomEventManager manager, Random random, @Nullable CommandSender trialExecutor) {
         this.manager = manager;
         this.random = random;
+        this.trialExecutor = trialExecutor;
         this.startedAtMillis = System.currentTimeMillis();
         this.selectedPlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
         this.selectedWorlds = new ArrayList<>(Bukkit.getWorlds());
+    }
+
+    /** Creates a trial context whose action result messages are sent to the initiating sender. */
+    public static DefaultEventContext trialRun(RandomEventManager manager, CommandSender executor) {
+        return new DefaultEventContext(manager, new Random(), Objects.requireNonNull(executor, "executor"));
+    }
+
+    @Override
+    public @Nullable CommandSender trialExecutor() {
+        return trialExecutor;
     }
 
     @Override

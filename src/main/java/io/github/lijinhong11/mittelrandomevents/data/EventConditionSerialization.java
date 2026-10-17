@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /** Bidirectional map codec for persisted event conditions. */
-public final class EventConditionCodec {
-    private EventConditionCodec() {}
+public final class EventConditionSerialization {
+    private EventConditionSerialization() {}
 
     public static EventCondition decode(Map<?, ?> values) {
         Object rawType = values.get("type");

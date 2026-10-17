@@ -5,6 +5,7 @@ import dev.faststats.bukkit.BukkitContext;
 import io.github.lijinhong11.mittellib.MittelLib;
 import io.github.lijinhong11.mittellib.configuration.MittelConfig;
 import io.github.lijinhong11.mittellib.message.SyncLanguageManager;
+import io.github.lijinhong11.mittellib.utils.updates.SmartUpdateChecker;
 import io.github.lijinhong11.mittelrandomevents.api.event.DefaultRandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.event.RandomEventManager;
 import io.github.lijinhong11.mittelrandomevents.api.line.DefaultRandomEventLineManager;
@@ -84,7 +85,11 @@ public class MittelRandomEvents extends JavaPlugin {
         fastStats.ready();
         new Metrics(this, 34430);
 
-        // an updater here
+        new SmartUpdateChecker(
+                this,
+                "82e9eaef-4663-46eb-b88c-74bf9315a522",
+                "TpFjOki0",
+                p -> languageManager.getMsgComponent(p, "update.notice"));
     }
 
     @Override

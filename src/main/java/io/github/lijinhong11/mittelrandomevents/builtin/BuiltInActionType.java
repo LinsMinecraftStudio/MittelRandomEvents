@@ -3,6 +3,7 @@ package io.github.lijinhong11.mittelrandomevents.builtin;
 import io.github.lijinhong11.mittellib.utils.StringUtils;
 import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
+import io.github.lijinhong11.mittelrandomevents.api.action.ActionResult;
 import io.github.lijinhong11.mittelrandomevents.api.action.ActionType;
 import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
@@ -14,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
@@ -22,12 +24,13 @@ import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Built-in action types shipped with MittelRandomEvents.
  *
  * <p>Every constant is registered by the plugin during startup. External plugins can add their
- * own {@link io.github.lijinhong11.mittelrandomevents.api.action.ActionType} implementations to
+ * own {@link ActionType} implementations to
  * the same registry without modifying this enum.
  */
 public enum BuiltInActionType implements ActionType {
@@ -36,7 +39,7 @@ public enum BuiltInActionType implements ActionType {
      */
     SELECT_PLAYERS("select_players") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             String permission = stringParameter(action, "permission", "", null);
             String worldName = stringParameter(action, "world", "", null);
 
@@ -48,6 +51,7 @@ public enum BuiltInActionType implements ActionType {
             shuffle(players, context);
             limit(players, amountParameter(action));
             context.setSelectedPlayers(players);
+            return ActionResult.success();
         }
     },
 
@@ -56,7 +60,7 @@ public enum BuiltInActionType implements ActionType {
      */
     SELECT_WORLDS("select_worlds") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             String worldName = stringParameter(action, "world", "", null);
             List<World> worlds = worldName.isBlank()
                     ? new ArrayList<>(Bukkit.getWorlds())
@@ -66,6 +70,7 @@ public enum BuiltInActionType implements ActionType {
             shuffle(worlds, context);
             limit(worlds, amountParameter(action));
             context.setSelectedWorlds(worlds);
+            return ActionResult.success();
         }
     },
 
@@ -74,8 +79,9 @@ public enum BuiltInActionType implements ActionType {
      */
     CLEAR_PLAYERS("clear_players") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             context.setSelectedPlayers(List.of());
+            return ActionResult.success();
         }
     },
 
@@ -84,131 +90,170 @@ public enum BuiltInActionType implements ActionType {
      */
     CLEAR_WORLDS("clear_worlds") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             context.setSelectedWorlds(List.of());
+            return ActionResult.success();
         }
     },
 
     /** Sends configured message text to the currently selected players. */
     MESSAGE_PLAYERS("message_players") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("message") == null) {
+                return ActionResult.valueNotPresented("message");
+            }
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player,
                             selected -> selected.sendMessage(
                                     ComponentUtils.deserialize(stringParameter(action, "message", "", selected)))));
+            return ActionResult.success();
         }
     },
 
     /** Broadcasts configured message text to the server. */
     BROADCAST("broadcast") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("message") == null) {
+                return ActionResult.valueNotPresented("message");
+            }
             Bukkit.broadcast(ComponentUtils.deserialize(stringParameter(action, "message", "", null)));
+            return ActionResult.success();
         }
     },
 
     /** Executes a command as the console sender. */
     EXECUTE_CONSOLE_COMMAND("execute_console_command") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("command") == null) {
+                return ActionResult.valueNotPresented("command");
+            }
             if (booleanParameter(action, "runForEachPlayer", false, null)) {
-                context.getSelectedPlayers()
-                        .forEach(player -> Bukkit.dispatchCommand(
-                                Bukkit.getConsoleSender(),
-                                interpolateCommand(
-                                        stringParameter(action, "command", "", player), action, context, player)));
-                return;
+                boolean successful = true;
+                for (Player player : context.getSelectedPlayers()) {
+                    successful &= Bukkit.dispatchCommand(
+                            Bukkit.getConsoleSender(),
+                            interpolateCommand(
+                                    stringParameter(action, "command", "", player), action, context, player));
+                }
+                return commandResult(successful);
             }
             String command = stringParameter(action, "command", "", null);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), interpolateCommand(command, action, context, null));
+            return commandResult(Bukkit.dispatchCommand(
+                    Bukkit.getConsoleSender(), interpolateCommand(command, action, context, null)));
         }
     },
 
     /** Executes a command once for every selected player. */
     EXECUTE_PLAYER_COMMAND("execute_player_command") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("command") == null) {
+                return ActionResult.valueNotPresented("command");
+            }
+            AtomicBoolean successful = new AtomicBoolean(true);
             context.getSelectedPlayers()
-                    .forEach(player -> onEntityAndWait(
-                            player,
-                            selected -> selected.performCommand(stringParameter(action, "command", "", selected))));
+                    .forEach(player -> onEntityAndWait(player, selected -> {
+                        if (!selected.performCommand(stringParameter(action, "command", "", selected))) {
+                            successful.set(false);
+                        }
+                    }));
+            return commandResult(successful.get());
         }
     },
 
     /** Heals every selected player by the configured amount. */
     HEAL_PLAYERS("heal_players") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("amount") == null) {
+                return ActionResult.valueNotPresented("amount");
+            }
             double amount = doubleParameter(action, "amount", 0.0D, null);
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player,
                             selected -> selected.setHealth(
                                     Math.min(selected.getMaxHealth(), selected.getHealth() + Math.max(0.0D, amount)))));
+            return ActionResult.success();
         }
     },
 
     /** Damages every selected player by the configured amount. */
     DAMAGE_PLAYERS("damage_players") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            if (action.parameters().get("amount") == null) {
+                return ActionResult.valueNotPresented("amount");
+            }
             double amount = Math.max(0.0D, doubleParameter(action, "amount", 0.0D, null));
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(player, selected -> selected.damage(amount)));
+            return ActionResult.success();
         }
     },
 
     /** Clears the inventories of every selected player. */
     CLEAR_INVENTORIES("clear_inventories") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player, selected -> selected.getInventory().clear()));
+            return ActionResult.success();
         }
     },
 
     /** Plays a Bukkit sound at every selected player's location. */
     PLAY_SOUND("play_sound") {
         @Override
-        public void execute(EventAction action, EventContext context) {
-            Sound sound = soundParameter(action);
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
+            String soundName = stringParameter(action, "sound", "minecraft:block.note_block.pling", null);
+            Sound sound = RegistryUtils.get(Registry.SOUND_EVENT, soundName);
+            if (sound == null) {
+                return ActionResult.invalidValue("sound", soundName);
+            }
             float volume = (float) doubleParameter(action, "volume", 1.0D, null);
             float pitch = (float) doubleParameter(action, "pitch", 1.0D, null);
             context.getSelectedPlayers()
                     .forEach(player -> onEntityAndWait(
                             player, selected -> selected.playSound(selected.getLocation(), sound, volume, pitch)));
+            return ActionResult.success();
         }
     },
 
     /** Applies storm and thunder settings to every selected world. */
     SET_WEATHER("set_weather") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             boolean storm = booleanParameter(action, "storm", false, null);
             boolean thunder = booleanParameter(action, "thunder", false, null);
             context.getSelectedWorlds().forEach(world -> {
                 world.setStorm(storm);
                 world.setThundering(thunder);
             });
+            return ActionResult.success();
         }
     },
 
     /** Stops all actions after this action in the current event. */
     STOP_ACTIONS("stop_actions") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             context.stop();
+            return ActionResult.success();
         }
     },
 
     /** Skips the action immediately following this action. */
     SKIP_NEXT_ACTION("skip_next_action") {
         @Override
-        public void execute(EventAction action, EventContext context) {
+        public ActionResult execute(@NonNull EventAction action, @NonNull EventContext context) {
             context.skipNext();
+            return ActionResult.success();
         }
     };
 
@@ -365,13 +410,12 @@ public enum BuiltInActionType implements ActionType {
         return result;
     }
 
-    private static Sound soundParameter(EventAction action) {
-        String value = stringParameter(action, "sound", "minecraft:block.note_block.pling", null);
-        Sound sound = RegistryUtils.get(Registry.SOUND_EVENT, value);
-        if (sound == null) {
-            throw new IllegalArgumentException("Unknown sound: " + value);
-        }
-        return sound;
+    private static ActionResult commandResult(boolean successful) {
+        return successful
+                ? ActionResult.success()
+                : ActionResult.fail(player -> MittelRandomEvents.getInstance()
+                        .getLanguageManager()
+                        .getMsgComponent(player, "mre.action.error.command_failed"));
     }
 
     private static void onEntityAndWait(Player player, Consumer<Player> action) {

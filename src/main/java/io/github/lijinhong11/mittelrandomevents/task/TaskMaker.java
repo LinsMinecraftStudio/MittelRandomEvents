@@ -4,6 +4,9 @@ import io.github.lijinhong11.mittellib.utils.task.CronTaskManager;
 import io.github.lijinhong11.mittelrandomevents.MittelRandomEvents;
 import io.github.lijinhong11.mittelrandomevents.api.event.EventContext;
 import io.github.lijinhong11.mittelrandomevents.api.line.RandomEventLine;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import org.bukkit.Bukkit;
 
@@ -15,7 +18,9 @@ import org.bukkit.Bukkit;
  */
 public class TaskMaker {
     private final CronTaskManager cronTaskManager = new CronTaskManager(MittelRandomEvents.getInstance());
+    private final Set<ScheduledTask> eventEndTasks = ConcurrentHashMap.newKeySet();
     private volatile boolean closing;
+    private volatile long lifecycleVersion;
 
     /**
      * Enables task creation after construction or a reload.
@@ -86,10 +91,28 @@ public class TaskMaker {
         if (closing) {
             return;
         }
+        long version = lifecycleVersion;
         Bukkit.getGlobalRegionScheduler().run(MittelRandomEvents.getInstance(), task -> {
+            if (closing || version != lifecycleVersion) {
+                return;
+            }
             EventContext context = contextSupplier.get();
             if (context != null) {
                 line.execute(context);
+                var event = line.currentEvent();
+                if (event != null && event.durationSeconds() > 0) {
+                    ScheduledTask endTask = Bukkit.getGlobalRegionScheduler()
+                            .runDelayed(
+                                    MittelRandomEvents.getInstance(),
+                                    end -> {
+                                        eventEndTasks.remove(end);
+                                        if (!closing && version == lifecycleVersion) {
+                                            line.finish(context);
+                                        }
+                                    },
+                                    event.durationSeconds() * 20L);
+                    eventEndTasks.add(endTask);
+                }
             }
         });
     }
@@ -117,7 +140,10 @@ public class TaskMaker {
      */
     public void close() {
         closing = true;
+        lifecycleVersion++;
         cronTaskManager.shutdown();
+        eventEndTasks.forEach(ScheduledTask::cancel);
+        eventEndTasks.clear();
     }
 
     /**

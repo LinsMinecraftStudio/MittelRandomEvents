@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Describes one executable action type.
@@ -19,7 +20,7 @@ import org.bukkit.Material;
  * <p>Actions belonging to one event are executed in their configured order. Every action receives
  * the same {@link EventContext} instance, so an action may update the context for later actions.
  * For example, a {@code select_players} action may call
- * {@link EventContext#setSelectedPlayers(java.util.Collection)}, after which a following action
+ * {@link EventContext#setSelectedPlayers(Collection)}, after which a following action
  * can use {@link EventContext#getSelectedPlayers()}.
  */
 public interface ActionType {
@@ -39,19 +40,21 @@ public interface ActionType {
      *
      * @param action the configured action instance to execute
      * @param context the runtime context in which the action is executed
+     * @return the execution result, including an optional failure message for the trial executor or console;
+     *         a failed result does not stop later actions unless the context is explicitly stopped
      * @throws RuntimeException if the action cannot be executed
      */
-    void execute(EventAction action, EventContext context);
+    @NotNull ActionResult execute(@NotNull EventAction action, @NotNull EventContext context);
 
     /**
-     * @return the direct display name component
+     * @return the display name component
      */
     default Component displayName() {
         return Component.text(id());
     }
 
     /**
-     * @return the direct description component
+     * @return the description component
      */
     default Component description() {
         return Component.empty();

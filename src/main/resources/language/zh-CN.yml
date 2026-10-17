@@ -44,7 +44,11 @@ command:
     unknown: "未知的%type%。"
   events:
     list: "事件（%count%）：%events%"
-    info: "事件 %id% 启用=%enabled% 动作=%actions% 条件=%conditions%"
+    info:
+      - "<#D7B769>事件 %id%"
+      - "<gray>启用：<white>%enabled%"
+      - "<gray>动作数量：<white>%actions%"
+      - "<gray>条件数量：<white>%conditions%"
     exists: "事件已存在。"
     create: "已创建事件 %id%。"
     delete: "已删除事件 %id%。"
@@ -67,7 +71,6 @@ command:
       icon: "已更新事件线图标。"
     start: "已启动事件线 %id%。"
     stop: "已停止事件线 %id%。"
-    run: "已单次运行事件线 %id%。"
 gui:
   home:
     title: "<#D7B769><bold>MittelRandomEvents</bold>"
@@ -260,7 +263,26 @@ gui:
     parameters-title: "<gold>条件参数"
     parameter-title: "<gold>设置条件参数"
 mre:
+  event:
+    execution:
+      summary:
+        - "<#D7B769>事件执行汇总"
+        - "<gray>事件线：<white>%line%"
+        - "<gray>事件：<white>%event%"
+        - "<gray>成功：<green>%success%"
+        - "<gray>失败：<red>%failed%"
+        - "<gray>跳过：<yellow>%skipped%"
+      running: "<yellow>事件线 %line% 已有正在运行的事件。"
+      no_event: "<yellow>事件线 %line% 没有符合条件的事件可执行。"
   action:
+    error:
+      value_not_presented: "<red>缺少动作必需参数：%parameter%。"
+      invalid_value: "<red>动作参数 %parameter% 的值无效：%value%。"
+      int_range: "<red>动作参数 %parameter% 必须是 %min% 到 %max% 之间的整数（包含边界）。"
+      long_range: "<red>动作参数 %parameter% 必须是 %min% 到 %max% 之间的长整数（包含边界）。"
+      float_range: "<red>动作参数 %parameter% 必须是 %min% 到 %max% 之间的有限单精度小数（包含边界）。"
+      double_range: "<red>动作参数 %parameter% 必须是 %min% 到 %max% 之间的有限双精度小数（包含边界）。"
+      command_failed: "<red>动作命令执行失败。"
     select_players:
       name: "选择玩家"
       description: "选择后续动作使用的在线玩家"

@@ -2,7 +2,9 @@ package io.github.lijinhong11.mittelrandomevents.api.event;
 
 import io.github.lijinhong11.mittellib.utils.components.ComponentUtils;
 import io.github.lijinhong11.mittelrandomevents.api.Localized;
+import io.github.lijinhong11.mittelrandomevents.api.action.ActionType;
 import io.github.lijinhong11.mittelrandomevents.api.action.EventAction;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -19,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>This class deliberately does not execute event logic. It only stores the event identifier,
  * its configured actions, its enabled state and its selection conditions. A
  * {@code RandomEventLine} owns event selection and resolves each action through the registered
- * {@link io.github.lijinhong11.mittelrandomevents.api.action.ActionType} implementations.
+ * {@link ActionType} implementations.
  */
 public class RandomEvent implements Localized {
     private final String id;
@@ -111,7 +114,7 @@ public class RandomEvent implements Localized {
     }
 
     @Override
-    public Component displayName(org.bukkit.command.CommandSender sender) {
+    public Component displayName(CommandSender sender) {
         return displayName;
     }
 
@@ -142,25 +145,25 @@ public class RandomEvent implements Localized {
     }
 
     public void addAction(EventAction action) {
-        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        List<EventAction> updated = new ArrayList<>(actions);
         updated.add(Objects.requireNonNull(action, "action"));
         actions = List.copyOf(updated);
     }
 
     public void addEndAction(EventAction action) {
-        List<EventAction> updated = new java.util.ArrayList<>(endActions);
+        List<EventAction> updated = new ArrayList<>(endActions);
         updated.add(Objects.requireNonNull(action, "action"));
         endActions = List.copyOf(updated);
     }
 
     public void removeAction(int index) {
-        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        List<EventAction> updated = new ArrayList<>(actions);
         updated.remove(index);
         actions = List.copyOf(updated);
     }
 
     public boolean removeAction(EventAction action) {
-        List<EventAction> updated = new java.util.ArrayList<>(actions);
+        List<EventAction> updated = new ArrayList<>(actions);
         if (!updated.remove(action)) {
             return false;
         }
@@ -169,26 +172,26 @@ public class RandomEvent implements Localized {
     }
 
     public boolean removeEndAction(EventAction action) {
-        List<EventAction> updated = new java.util.ArrayList<>(endActions);
+        List<EventAction> updated = new ArrayList<>(endActions);
         if (!updated.remove(action)) return false;
         endActions = List.copyOf(updated);
         return true;
     }
 
     public void removeCondition(int index) {
-        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        List<EventCondition> updated = new ArrayList<>(conditions);
         updated.remove(index);
         conditions = List.copyOf(updated);
     }
 
     public void addCondition(EventCondition condition) {
-        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        List<EventCondition> updated = new ArrayList<>(conditions);
         updated.add(Objects.requireNonNull(condition, "condition"));
         setConditions(updated);
     }
 
     public void setCondition(int index, EventCondition condition) {
-        List<EventCondition> updated = new java.util.ArrayList<>(conditions);
+        List<EventCondition> updated = new ArrayList<>(conditions);
         updated.set(index, Objects.requireNonNull(condition, "condition"));
         setConditions(updated);
     }

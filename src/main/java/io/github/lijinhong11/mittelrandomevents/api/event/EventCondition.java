@@ -1,5 +1,7 @@
 package io.github.lijinhong11.mittelrandomevents.api.event;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -47,8 +49,8 @@ public interface EventCondition {
      *
      * @return supported parameter names
      */
-    default java.util.Collection<String> parameterNames() {
-        return java.util.List.of();
+    default Collection<String> parameterNames() {
+        return List.of();
     }
 
     /**
