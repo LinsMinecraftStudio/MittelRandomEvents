@@ -1,0 +1,2 @@
+1. 新增更新检查器
+2. 实现 ActionType#execute 需要返回 ActionResult
