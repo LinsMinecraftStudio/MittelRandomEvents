@@ -9,7 +9,7 @@ plugins {
     java
     signing
     id("com.diffplug.spotless") version "8.0.0"
-    id("io.github.lijinhong11.nexusmcpublisher") version "1.0.3"
+    id("io.github.lijinhong11.nexusmcpublisher") version "1.0.7"
     id("io.freefair.lombok") version "9.5.0"
     id("com.vanniktech.maven.publish") version "0.36.0"
 }
@@ -62,12 +62,11 @@ spotless {
 }
 
 nexusMCPublisher {
-    resourceId.set("")
+    resourceId.set("82e9eaef-4663-46eb-b88c-74bf9315a522")
     versionTag.set(VersionTag.RELEASE)
     versionTitle = project.property("version") as String
     changelog.set(file("changelog.txt").readLines(StandardCharsets.UTF_8).joinToString("\n"))
-    mcVersions.set(listOf("26.1", "26.1.1", "26.1.2", "26.2"))
-    token = System.getenv("NEXUSMC_API_TOKEN")
+    mcVersions.set(listOf("26.1", "26.1.1", "26.1.2", "26.2", "26.3"))
 }
 
 mavenPublishing {

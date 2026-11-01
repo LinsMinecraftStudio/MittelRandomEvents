@@ -4,7 +4,6 @@
 
 - [ ] **A small starter collection** — ready-to-use examples such as random rewards, server announcements, and temporary weather events.
 - [ ] **A short first-event guide** — walk from creating an event to triggering it, with a few screenshots and useful command/placeholder examples.
-- [ ] **Polish the initial release** — fix issues found on real servers, with particular attention to event endings, reloads, scheduling, and GUI feedback.
 
 ## Then: Make Events Easier to Build
 
